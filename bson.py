@@ -19,6 +19,10 @@ over-engineered:
 	0x11 (MongoDB-specific timestamp)
 
 For binaries, only the default 0x0 type is supported.
+
+Author: Martin Kou
+I hereby put this piece of code under the BSD license... add the proper wording
+later.
 """
 
 import struct

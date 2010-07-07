@@ -1,0 +1,16 @@
+TO USE:
+Add bson.py to your project.
+
+>> import bson
+>>> a = bson.dumps({"A":[1,2,3,4,5,"6", u"7", {"C":u"DS"}]})
+>>> b = bson.loads(a)
+>>> b
+{'A': [1, 2, 3, 4, 5, '6', u'7', {'C': u'DS'}]}
+
+Currently, bson.dumps() and bson.loads() expects everything to be documents, or
+dicts in Python-speak.
+
+TODO:
+1. Make dumps() and loads() accept types other than documents/dicts.
+2. Add setup.py so it can be packaged to an egg.
+3. Write doctests.

@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(name = "bson",
 		version="0.1",
-		packages=find_packages(),
+		packages=["bson"],
 		author = "Kou Man Tong",
 		author_email = "martinkou@thinkbulbs.com",
 		description = "BSON codec for Python",

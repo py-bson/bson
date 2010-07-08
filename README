@@ -1,6 +1,4 @@
 TO USE:
-Add bson.py to your project.
-
 >> import bson
 >>> a = bson.dumps({"A":[1,2,3,4,5,"6", u"7", {"C":u"DS"}]})
 >>> b = bson.loads(a)
@@ -11,9 +9,12 @@ Currently, bson.dumps() and bson.loads() expects everything to be documents, or
 dicts in Python-speak.
 
 TO INSTALL:
+If you want to try out the source package, you do this...
 $ ./setup.py build
 $ sudo ./setup.py install
 
+Or, you can simply do this instead...
+$ sudo easy_install bson
+
 TODO:
-1. Make dumps() and loads() accept types other than documents/dicts.
-2. Write doctests.
+1. Write doctests.

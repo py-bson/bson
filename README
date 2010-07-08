@@ -10,7 +10,10 @@ Add bson.py to your project.
 Currently, bson.dumps() and bson.loads() expects everything to be documents, or
 dicts in Python-speak.
 
+TO INSTALL:
+$ ./setup.py build
+$ sudo ./setup.py install
+
 TODO:
 1. Make dumps() and loads() accept types other than documents/dicts.
-2. Add setup.py so it can be packaged to an egg.
-3. Write doctests.
+2. Write doctests.

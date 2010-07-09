@@ -96,10 +96,9 @@ def encode_document(obj):
 		elif value is None:
 			buf.write(encode_none_element(name, value))
 		elif isinstance(value, int):
-			if value > 0x7ffffff or value < -0x80000000:
-				buf.write(encode_int64_element(name, value))
-			else:
-				buf.write(encode_int32_element(name, value))
+			buf.write(encode_int32_element(name, value))
+		elif isinstance(value, long):
+			buf.write(encode_int64_element(name, value))
 	e_list = buf.getvalue()
 	e_list_length = len(e_list)
 	return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1,

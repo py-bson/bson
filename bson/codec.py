@@ -10,15 +10,18 @@ import cStringIO
 
 # {{{ Private Logic
 def encode_string(value):
+	value = value.encode("utf8")
 	length = len(value)
 	return struct.pack("<i%dsb" % (length,), length + 1, value, 0)
 
 def decode_string(data, base):
 	length = struct.unpack("<i", data[base:base + 4])[0]
 	value = data[base + 4: base + 4 + length - 1]
+	value = value.decode("utf8")
 	return (base + 4 + length, value)
 
 def encode_cstring(value):
+	value = value.encode("utf8")
 	return value + "\x00"
 
 def decode_cstring(data, base):
@@ -29,7 +32,7 @@ def decode_cstring(data, base):
 		if character == "\x00":
 			break
 		buf.write(character)
-	return (base + length, buf.getvalue())
+	return (base + length, buf.getvalue().decode("utf8"))
 
 def encode_binary(value):
 	length = len(value)
@@ -74,7 +77,6 @@ def encode_string_element(name, value):
 def decode_string_element(data, base):
 	base, name = decode_cstring(data, base + 1)
 	base, value = decode_string(data, base)
-	value = value.decode("utf8")
 	return (base, name, value)
 
 def encode_document(obj):

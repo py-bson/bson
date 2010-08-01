@@ -21,7 +21,8 @@ def decode_string(data, base):
 	return (base + 4 + length, value)
 
 def encode_cstring(value):
-	value = value.encode("utf8")
+	if isinstance(value, unicode):
+		value = value.encode("utf8")
 	return value + "\x00"
 
 def decode_cstring(data, base):
@@ -70,8 +71,6 @@ def decode_double_element(data, base):
 	return (base, name, value)
 
 def encode_string_element(name, value):
-	if isinstance(value, unicode):
-		value = value.encode("utf8")
 	return "\x02" + encode_cstring(name) + encode_string(value)
 
 def decode_string_element(data, base):

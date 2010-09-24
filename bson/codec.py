@@ -88,7 +88,7 @@ def encode_document(obj):
 			buf.write(encode_string_element(name, value))
 		elif isinstance(value, dict):
 			buf.write(encode_document_element(name, value))
-		elif isinstance(value, list):
+		elif isinstance(value, list) or isinstance(value, tuple):
 			buf.write(encode_array_element(name, value))
 		elif isinstance(value, str):
 			buf.write(encode_binary_element(name, value))

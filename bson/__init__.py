@@ -9,9 +9,6 @@ The following types are unsupported, because for data exchange purposes, they're
 over-engineered:
 	0x06 (Undefined)
 	0x07 (ObjectId)
-	0x09 (UTC datetime - Sorry, but Python's datetime module sucks.
-		datetime.now() has no timezone? Seriously?! Simple timestamps will save
-		you a lot of trouble)
 	0x0b (Regex - Exactly which flavor do you want? Better let higher level
 		programmers make that decision.)
 	0x0c (DBPointer)

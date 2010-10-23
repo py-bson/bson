@@ -7,6 +7,8 @@ Base codec functions for bson.
 """
 import struct
 import cStringIO
+import time
+from datetime import datetime
 
 # {{{ Private Logic
 def encode_string(value):
@@ -57,6 +59,7 @@ ELEMENT_TYPES = {
 		0x04 : "array",
 		0x05 : "binary",
 		0x08 : "boolean",
+        0x09 : "UTCdatetime",
 		0x0A : "none",
 		0x10 : "int32",
 		0x12 : "int64"
@@ -94,6 +97,8 @@ def encode_document(obj):
 			buf.write(encode_binary_element(name, value))
 		elif isinstance(value, bool):
 			buf.write(encode_boolean_element(name, value))
+		elif isinstance(value, datetime):
+			buf.write(encode_UTCdatetime_element(name, value))
 		elif value is None:
 			buf.write(encode_none_element(name, value))
 		elif isinstance(value, int):
@@ -158,6 +163,15 @@ def decode_boolean_element(data, base):
 	base, name = decode_cstring(data, base + 1)
 	value = not not struct.unpack("<b", data[base:base + 1])[0]
 	return (base + 1, name, value)
+
+def encode_UTCdatetime_element(name, value):
+	value = int(round(time.mktime(value.timetuple()) * 1000 + (value.microsecond / 1000.0)))
+	return "\x09" + encode_cstring(name) + struct.pack("<q", value)
+
+def decode_UTCdatetime_element(data, base):
+	base, name = decode_cstring(data, base + 1)
+	value = datetime.fromtimestamp(struct.unpack("<q", data[base:base + 8])[0] / 1000.0)
+	return (base + 8, name, value)
 
 def encode_none_element(name, value):
 	return "\x0a" + encode_cstring(name)

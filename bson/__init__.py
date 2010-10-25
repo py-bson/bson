@@ -24,6 +24,8 @@ For binaries, only the default 0x0 type is supported.
 """
 
 from codec import *
+from document_codec import *
+
 __all__ = ["loads", "dumps"]
 
 # {{{ Public API

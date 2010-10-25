@@ -6,7 +6,10 @@
 Base codec functions for bson.
 """
 import struct
-import cStringIO
+try:
+	import cStringIO as StringIO
+except ImportError:
+	import StringIO
 
 # {{{ Private Logic
 def encode_string(value):

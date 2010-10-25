@@ -42,7 +42,7 @@ class DocumentCodec(object):
 	@contextmanager
 	def dict_ctx(self, name):
 		"""Yield a sub-DocumentCodec, which also allows ordered writes"""
-		self.buf.write('\x03' + name)
+		self.buf.write('\x03' + codec.encode_cstring(name))
 		inner_doc = DocumentCodec()
 		yield inner_doc
 		self.buf.write(str(inner_doc))

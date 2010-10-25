@@ -7,7 +7,7 @@ Base codec functions for bson.
 """
 import struct
 try:
-	import cStringIO as StringIO
+	import StringIO as StringIO
 except ImportError:
 	import StringIO
 
@@ -29,7 +29,7 @@ def encode_cstring(value):
 	return value + "\x00"
 
 def decode_cstring(data, base):
-	buf = cStringIO.StringIO()
+	buf = StringIO.StringIO()
 	length = 0
 	for character in data[base:]:
 		length += 1
@@ -82,7 +82,7 @@ def decode_string_element(data, base):
 	return (base, name, value)
 
 def encode_document(obj):
-	buf = cStringIO.StringIO()
+	buf = StringIO.StringIO()
 	for name in obj:
 		value = obj[name]
 		if isinstance(value, float):

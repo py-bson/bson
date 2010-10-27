@@ -6,8 +6,9 @@
 from setuptools import setup, find_packages
 
 setup(name = "bson",
-		version="0.1.3",
+		version="0.1.4pre1",
 		packages=["bson"],
+		install_requires = ["pytz>=2010b"],
 		author = "Kou Man Tong",
 		author_email = "martinkou@thinkbulbs.com",
 		description = "BSON codec for Python",

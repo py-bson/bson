@@ -7,9 +7,18 @@ Base codec functions for bson.
 """
 import struct
 import cStringIO
-import time
+import calendar, pytz
 from datetime import datetime
+import warnings
 
+# {{{ Warning Classes
+class MissingTimezoneWarning(RuntimeWarning):
+	def __init__(self, *args):
+		args = list(args)
+		if len(args) < 1:
+			args.append("Input datetime object has no tzinfo, assuming UTC.")
+		super(MissingTimezoneWarning, self).__init__(*args)
+# }}}
 # {{{ Private Logic
 def encode_string(value):
 	value = value.encode("utf8")
@@ -165,12 +174,16 @@ def decode_boolean_element(data, base):
 	return (base + 1, name, value)
 
 def encode_UTCdatetime_element(name, value):
-	value = int(round(time.mktime(value.timetuple()) * 1000 + (value.microsecond / 1000.0)))
+	if value.tzinfo is None:
+		warnings.warn(MissingTimezoneWarning(), None, 4)
+	value = int(round(calendar.timegm(value.utctimetuple()) * 1000 +
+		(value.microsecond / 1000.0)))
 	return "\x09" + encode_cstring(name) + struct.pack("<q", value)
 
 def decode_UTCdatetime_element(data, base):
 	base, name = decode_cstring(data, base + 1)
-	value = datetime.fromtimestamp(struct.unpack("<q", data[base:base + 8])[0] / 1000.0)
+	value = datetime.fromtimestamp(struct.unpack("<q",
+		data[base:base + 8])[0] / 1000.0, pytz.utc)
 	return (base + 8, name, value)
 
 def encode_none_element(name, value):

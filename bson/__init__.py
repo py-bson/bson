@@ -52,9 +52,10 @@ For binaries, only the default 0x0 type is supported.
 """
 
 from codec import *
+import network
 __all__ = ["loads", "dumps"]
 
-# {{{ Public API
+# {{{ Serialization and Deserialization
 def dumps(obj, generator = None):
 	"""
 	Given a dict, outputs a BSON string.
@@ -70,6 +71,27 @@ def loads(data):
 	Given a BSON string, outputs a dict.
 	"""
 	return decode_document(data, 0)[1]
+# }}}
+# {{{ Socket Patchers
+def patch_socket():
+	"""
+	Patches the Python socket class such that sockets can send and receive BSON
+	objects atomically.
+
+	This adds the following functions to socket:
+
+	recvbytes(bytes_needed, sock_buf = None) - reads bytes_needed bytes
+	atomically. Returns None if socket closed.
+
+	recvobj() - reads a BSON document from the socket atomically and returns
+	the deserialized dictionary. Returns None if socket closed.
+
+	sendobj(obj) - sends a BSON document to the socket atomically. 
+	"""
+	from socket import socket
+	socket.recvbytes = network._recvbytes
+	socket.recvobj = network._recvobj
+	socket.sendobj = network._sendobj
 # }}}
 # {{{ Unit Tests
 if __name__ == "__main__":

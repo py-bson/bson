@@ -18,21 +18,62 @@ over-engineered:
 	0x11 (MongoDB-specific timestamp)
 
 For binaries, only the default 0x0 type is supported.
+
+
+>>> a = {
+...   u"Item A" : u"String item A",
+...   u"Item D" : {u"ROFLOL" : u"Blah blah blah"},
+...   u"Item C" : [1, 123456789012345, None, "Party and Bad Romance"],
+...   u"Item B" : u"\u4e00\u9580\u4e94\u5091"
+... }
+>>> def sorted(obj, dfs_stack):
+...   keys = obj.keys()
+...   keys.sort()
+...   for i in keys: yield i
+... 
+>>> def reverse(obj, dfs_stack):
+...   keys = obj.keys()
+...   keys.sort(reverse = True)
+...   for i in keys: yield i
+... 
+>>> serialized = dumps(a, sorted)
+>>> serialized
+'\\x9f\\x00\\x00\\x00\\x02Item A\\x00\\x0e\\x00\\x00\\x00String item A\\x00\\x02Item B\\x00\\r\\x00\\x00\\x00\\xe4\\xb8\\x80\\xe9\\x96\\x80\\xe4\\xba\\x94\\xe5\\x82\\x91\\x00\\x04Item C\\x007\\x00\\x00\\x00\\x100\\x00\\x01\\x00\\x00\\x00\\x121\\x00y\\xdf\\r\\x86Hp\\x00\\x00\\n2\\x00\\x053\\x00\\x15\\x00\\x00\\x00\\x00Party and Bad Romance\\x00\\x03Item D\\x00 \\x00\\x00\\x00\\x02ROFLOL\\x00\\x0f\\x00\\x00\\x00Blah blah blah\\x00\\x00\\x00'
+>>> 
+>>> b = loads(serialized)
+>>> b
+{u'Item C': [1, 123456789012345, None, 'Party and Bad Romance'], u'Item B': u'\\u4e00\\u9580\\u4e94\\u5091', u'Item A': u'String item A', u'Item D': {u'ROFLOL': u'Blah blah blah'}}
+>>> reverse_serialized = dumps(a, reverse)
+>>> reverse_serialized
+'\\x9f\\x00\\x00\\x00\\x03Item D\\x00 \\x00\\x00\\x00\\x02ROFLOL\\x00\\x0f\\x00\\x00\\x00Blah blah blah\\x00\\x00\\x04Item C\\x007\\x00\\x00\\x00\\x053\\x00\\x15\\x00\\x00\\x00\\x00Party and Bad Romance\\n2\\x00\\x121\\x00y\\xdf\\r\\x86Hp\\x00\\x00\\x100\\x00\\x01\\x00\\x00\\x00\\x00\\x02Item B\\x00\\r\\x00\\x00\\x00\\xe4\\xb8\\x80\\xe9\\x96\\x80\\xe4\\xba\\x94\\xe5\\x82\\x91\\x00\\x02Item A\\x00\\x0e\\x00\\x00\\x00String item A\\x00\\x00'
+>>> c = loads(reverse_serialized)
+>>> c
+{u'Item C': [1, 123456789012345, None, 'Party and Bad Romance'], u'Item B': u'\\u4e00\\u9580\\u4e94\\u5091', u'Item A': u'String item A', u'Item D': {u'ROFLOL': u'Blah blah blah'}}
 """
 
 from codec import *
 __all__ = ["loads", "dumps"]
 
 # {{{ Public API
-def dumps(obj):
+def dumps(obj, generator = None):
 	"""
 	Given a dict, outputs a BSON string.
+
+	generator is an optional function which accepts the dictionary/array being
+	encoded, the current DFS traversal stack, and outputs an iterator indicating
+	the correct encoding order for keys.
 	"""
-	return encode_document(obj)
+	return encode_document(obj, [], generator_func = generator)
 
 def loads(data):
 	"""
 	Given a BSON string, outputs a dict.
 	"""
 	return decode_document(data, 0)[1]
+# }}}
+# {{{ Unit Tests
+if __name__ == "__main__":
+	import doctest
+	result = doctest.testmod()
+	print "%d tests attempted, %d failed" % (result.attempted, result.failed)
 # }}}

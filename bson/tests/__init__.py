@@ -25,10 +25,10 @@ def additional_tests():
 	return suite
 
 def main():
+	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 	suite = test_suite()
 	runner = unittest.TextTestRunner()
 	runner.run(suite)
 
 if __name__ == '__main__':
-	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 	main()

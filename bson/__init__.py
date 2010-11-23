@@ -64,6 +64,8 @@ def dumps(obj, generator = None):
 	encoded, the current DFS traversal stack, and outputs an iterator indicating
 	the correct encoding order for keys.
 	"""
+	if isinstance(obj, BSONCoding):
+		return encode_object(obj, [], generator_func = generator)
 	return encode_document(obj, [], generator_func = generator)
 
 def loads(data):
@@ -92,10 +94,4 @@ def patch_socket():
 	socket.recvbytes = network._recvbytes
 	socket.recvobj = network._recvobj
 	socket.sendobj = network._sendobj
-# }}}
-# {{{ Unit Tests
-if __name__ == "__main__":
-	import doctest
-	result = doctest.testmod()
-	print "%d tests attempted, %d failed" % (result.attempted, result.failed)
 # }}}

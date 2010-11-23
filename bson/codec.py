@@ -10,7 +10,14 @@ import cStringIO
 import calendar, pytz
 from datetime import datetime
 import warnings
+from abc import ABCMeta, abstractmethod
 
+# {{{ Error Classes
+class MissingClassDefinition(ValueError):
+	def __init__(self, class_name):
+		super(MissingClassDefinition, self).__init__(
+		"No class definition for class %s" % (class_name,))
+# }}}
 # {{{ Warning Classes
 class MissingTimezoneWarning(RuntimeWarning):
 	def __init__(self, *args):
@@ -25,7 +32,68 @@ class TraversalStep(object):
 		self.parent = parent
 		self.key = key
 # }}}
-# {{{ Private Logic
+# {{{ Custom Object Codec
+
+class BSONCoding(object):
+	__metaclass__ = ABCMeta
+
+	@abstractmethod
+	def bson_encode(self):
+		pass
+
+	@abstractmethod
+	def bson_init(self, raw_values):
+		pass
+
+classes = {}
+
+def import_class(cls):
+	if not issubclass(cls, BSONCoding):
+		return
+
+	global classes
+	classes[cls.__name__] = cls
+
+def import_classes(*args):
+	for cls in args:
+		import_class(cls)
+
+def import_classes_from_modules(*args):
+	for module in args:
+		for item in module.__dict__:
+			if hasattr(item, "__new__") and hasattr(item, "__name__"):
+				import_class(item)
+
+def encode_object(obj, traversal_stack, generator_func):
+	values = obj.bson_encode()
+	class_name = obj.__class__.__name__
+	values["$$__CLASS_NAME__$$"] = class_name
+	return encode_document(values, traversal_stack, obj, generator_func)
+
+def encode_object_element(name, value, traversal_stack, generator_func):
+	return "\x03" + encode_cstring(name) + \
+			encode_object(value, traversal_stack,
+					generator_func = generator_func)
+
+class _EmptyClass(object):
+	pass
+
+def decode_object(raw_values):
+	global classes
+	class_name = raw_values["$$__CLASS_NAME__$$"]
+	cls = None
+	try:
+		cls = classes[class_name]
+	except KeyError, e:
+		raise MissingClassDefinition(class_name)
+
+	retval = _EmptyClass()
+	retval.__class__ = cls
+	retval.bson_init(raw_values)
+	return retval
+
+# }}}
+# {{{ Codec Logic
 def encode_string(value):
 	value = value.encode("utf8")
 	length = len(value)
@@ -106,7 +174,9 @@ def encode_document(obj, traversal_stack,
 	for name in key_iter:
 		value = obj[name]
 		traversal_stack.append(TraversalStep(traversal_parent or obj, name))
-		if isinstance(value, float):
+		if isinstance(value, BSONCoding):
+			buf.write(encode_object_element(name, value))
+		elif isinstance(value, float):
 			buf.write(encode_double_element(name, value))
 		elif isinstance(value, unicode):
 			buf.write(encode_string_element(name, value))
@@ -151,6 +221,8 @@ def decode_document(data, base):
 	while base < end_point - 1:
 		base, name, value = decode_element(data, base)
 		retval[name] = value
+	if "$$__CLASS_NAME__$$" in retval:
+		retval = decode_object(retval)
 	return (end_point, retval)
 
 def encode_document_element(name, value, traversal_stack, generator_func):

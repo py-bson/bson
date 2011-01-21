@@ -6,7 +6,7 @@
 from setuptools import setup, find_packages
 
 setup(name = "bson",
-		version="0.3rc",
+		version="0.3",
 		packages=["bson"],
 		install_requires = ["pytz>=2010b"],
 		author = "Kou Man Tong",

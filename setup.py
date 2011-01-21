@@ -6,11 +6,11 @@
 from setuptools import setup, find_packages
 
 setup(name = "bson",
-		version="0.2",
+		version="0.3rc",
 		packages=["bson"],
 		install_requires = ["pytz>=2010b"],
 		author = "Kou Man Tong",
-		author_email = "martinkou@thinkbulbs.com",
+		author_email = "martinkou@tixxme.com",
 		description = "BSON codec for Python",
 		long_description = \
 		"""Independent BSON codec for Python that doesn't depend on MongoDB.""",

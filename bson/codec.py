@@ -185,7 +185,7 @@ def encode_document(obj, traversal_stack,
 				traversal_stack, generator_func))
 		elif isinstance(value, list) or isinstance(value, tuple):
 			buf.write(encode_array_element(name, value,
-				traversal_stack, generator_func))
+				traversal_stack))
 		elif isinstance(value, str):
 			buf.write(encode_binary_element(name, value))
 		elif isinstance(value, bool):
@@ -235,18 +235,23 @@ def decode_document_element(data, base):
 	base, value = decode_document(data, base)
 	return (base, name, value)
 
-def encode_array_element(name, value, traversal_stack, generator_func):
+def array_key_generator(obj, traversal_stack):
+	keys = obj.keys()
+	keys.sort(lambda x, y: cmp(int(x), int(y)))
+	for i in keys: yield i
+
+def encode_array_element(name, value, traversal_stack):
 	return "\x04" + encode_cstring(name) + \
 		encode_document(dict([(str(i), value[i]) for i in xrange(0,
 			len(value))]), traversal_stack,
 			traversal_parent = value,
-			generator_func = generator_func)
+			generator_func = array_key_generator)
 
 def decode_array_element(data, base):
 	base, name = decode_cstring(data, base + 1)
 	base, value = decode_document(data, base)
 	keys = value.keys()
-	keys.sort()
+	keys.sort(lambda x, y: cmp(int(x), int(y)))
 	retval = []
 	for i in keys:
 		retval.append(value[i])

@@ -45,7 +45,7 @@ For binaries, only the default 0x0 type is supported.
 {u'Item C': [1, 123456789012345, None, 'Party and Bad Romance'], u'Item B': u'\\u4e00\\u9580\\u4e94\\u5091', u'Item A': u'String item A', u'Item D': {u'ROFLOL': u'Blah blah blah'}}
 >>> reverse_serialized = dumps(a, reverse)
 >>> reverse_serialized
-'\\x9f\\x00\\x00\\x00\\x03Item D\\x00 \\x00\\x00\\x00\\x02ROFLOL\\x00\\x0f\\x00\\x00\\x00Blah blah blah\\x00\\x00\\x04Item C\\x007\\x00\\x00\\x00\\x053\\x00\\x15\\x00\\x00\\x00\\x00Party and Bad Romance\\n2\\x00\\x121\\x00y\\xdf\\r\\x86Hp\\x00\\x00\\x100\\x00\\x01\\x00\\x00\\x00\\x00\\x02Item B\\x00\\r\\x00\\x00\\x00\\xe4\\xb8\\x80\\xe9\\x96\\x80\\xe4\\xba\\x94\\xe5\\x82\\x91\\x00\\x02Item A\\x00\\x0e\\x00\\x00\\x00String item A\\x00\\x00'
+'\\x9f\\x00\\x00\\x00\\x03Item D\\x00 \\x00\\x00\\x00\\x02ROFLOL\\x00\\x0f\\x00\\x00\\x00Blah blah blah\\x00\\x00\\x04Item C\\x007\\x00\\x00\\x00\\x100\\x00\\x01\\x00\\x00\\x00\\x121\\x00y\\xdf\\r\\x86Hp\\x00\\x00\\n2\\x00\\x053\\x00\\x15\\x00\\x00\\x00\\x00Party and Bad Romance\\x00\\x02Item B\\x00\\r\\x00\\x00\\x00\\xe4\\xb8\\x80\\xe9\\x96\\x80\\xe4\\xba\\x94\\xe5\\x82\\x91\\x00\\x02Item A\\x00\\x0e\\x00\\x00\\x00String item A\\x00\\x00'
 >>> c = loads(reverse_serialized)
 >>> c
 {u'Item C': [1, 123456789012345, None, 'Party and Bad Romance'], u'Item B': u'\\u4e00\\u9580\\u4e94\\u5091', u'Item A': u'String item A', u'Item D': {u'ROFLOL': u'Blah blah blah'}}

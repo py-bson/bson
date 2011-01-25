@@ -164,6 +164,35 @@ def decode_string_element(data, base):
 	base, value = decode_string(data, base)
 	return (base, name, value)
 
+def encode_value(name, value, buf, traversal_stack, generator_func):
+	if isinstance(value, BSONCoding):
+		buf.write(encode_object_element(name, value))
+	elif isinstance(value, float):
+		buf.write(encode_double_element(name, value))
+	elif isinstance(value, unicode):
+		buf.write(encode_string_element(name, value))
+	elif isinstance(value, dict):
+		buf.write(encode_document_element(name, value,
+			traversal_stack, generator_func))
+	elif isinstance(value, list) or isinstance(value, tuple):
+		buf.write(encode_array_element(name, value,
+			traversal_stack, generator_func))
+	elif isinstance(value, str):
+		buf.write(encode_binary_element(name, value))
+	elif isinstance(value, bool):
+		buf.write(encode_boolean_element(name, value))
+	elif isinstance(value, datetime):
+		buf.write(encode_UTCdatetime_element(name, value))
+	elif value is None:
+		buf.write(encode_none_element(name, value))
+	elif isinstance(value, int):
+		if value < -0x80000000 or value > 0x7fffffff:
+			buf.write(encode_int64_element(name, value))
+		else:
+			buf.write(encode_int32_element(name, value))
+	elif isinstance(value, long):
+		buf.write(encode_int64_element(name, value))
+
 def encode_document(obj, traversal_stack,
 		traversal_parent = None,
 		generator_func = None):
@@ -174,33 +203,21 @@ def encode_document(obj, traversal_stack,
 	for name in key_iter:
 		value = obj[name]
 		traversal_stack.append(TraversalStep(traversal_parent or obj, name))
-		if isinstance(value, BSONCoding):
-			buf.write(encode_object_element(name, value))
-		elif isinstance(value, float):
-			buf.write(encode_double_element(name, value))
-		elif isinstance(value, unicode):
-			buf.write(encode_string_element(name, value))
-		elif isinstance(value, dict):
-			buf.write(encode_document_element(name, value,
-				traversal_stack, generator_func))
-		elif isinstance(value, list) or isinstance(value, tuple):
-			buf.write(encode_array_element(name, value,
-				traversal_stack))
-		elif isinstance(value, str):
-			buf.write(encode_binary_element(name, value))
-		elif isinstance(value, bool):
-			buf.write(encode_boolean_element(name, value))
-		elif isinstance(value, datetime):
-			buf.write(encode_UTCdatetime_element(name, value))
-		elif value is None:
-			buf.write(encode_none_element(name, value))
-		elif isinstance(value, int):
-			if value < -0x80000000 or value > 0x7fffffff:
-				buf.write(encode_int64_element(name, value))
-			else:
-				buf.write(encode_int32_element(name, value))
-		elif isinstance(value, long):
-			buf.write(encode_int64_element(name, value))
+		encode_value(name, value, buf, traversal_stack, generator_func)
+		traversal_stack.pop()
+	e_list = buf.getvalue()
+	e_list_length = len(e_list)
+	return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1,
+			e_list, 0)
+
+def encode_array(array, traversal_stack,
+		traversal_parent = None,
+		generator_func = None):
+	buf = cStringIO.StringIO()
+	for i in xrange(0, len(array)):
+		value = array[i]
+		traversal_stack.append(TraversalStep(traversal_parent or array, i))
+		encode_value(unicode(i), value, buf, traversal_stack, generator_func)
 		traversal_stack.pop()
 	e_list = buf.getvalue()
 	e_list_length = len(e_list)
@@ -235,26 +252,21 @@ def decode_document_element(data, base):
 	base, value = decode_document(data, base)
 	return (base, name, value)
 
-def array_key_generator(obj, traversal_stack):
-	keys = obj.keys()
-	keys.sort(lambda x, y: cmp(int(x), int(y)))
-	for i in keys: yield i
-
-def encode_array_element(name, value, traversal_stack):
+def encode_array_element(name, value, traversal_stack, generator_func):
 	return "\x04" + encode_cstring(name) + \
-		encode_document(dict([(str(i), value[i]) for i in xrange(0,
-			len(value))]), traversal_stack,
-			traversal_parent = value,
-			generator_func = array_key_generator)
+			encode_array(value, traversal_stack, generator_func = generator_func)
 
 def decode_array_element(data, base):
 	base, name = decode_cstring(data, base + 1)
 	base, value = decode_document(data, base)
-	keys = value.keys()
-	keys.sort(lambda x, y: cmp(int(x), int(y)))
 	retval = []
-	for i in keys:
-		retval.append(value[i])
+	try:
+		i = 0
+		while True:
+			retval.append(value[unicode(i)])
+			i += 1
+	except KeyError:
+		pass
 	return (base, name, retval)
 
 def encode_binary_element(name, value):

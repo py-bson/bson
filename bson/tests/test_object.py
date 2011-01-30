@@ -5,26 +5,27 @@ from unittest import TestCase
 
 class TestData(BSONCoding):
 	def __init__(self, *args):
-		self.args = args
+		self.args = list(args)
+		self.nested = None
 
 	def bson_encode(self):
-		return {"args" : self.args}
+		return {"args" : self.args, "nested" : self.nested}
 
 	def bson_init(self, raw_values):
 		self.args = raw_values["args"]
+		self.nested = raw_values["nested"]
 
 	def __eq__(self, other):
 		if not isinstance(other, TestData):
 			return NotImplemented
-		args = other.args
-		if len(self.args) != len(args):
+		if self.args != other.args:
 			return False
-
-		for i in xrange(0, len(self.args)):
-			if self.args[i] != args[i]:
-				return False
-
+		if self.nested != other.nested:
+			return False
 		return True
+
+	def __ne__(self, other):
+		return not self.__eq__(other)
 
 class TestObjectCoding(TestCase):
 	def test_codec(self):
@@ -32,6 +33,17 @@ class TestObjectCoding(TestCase):
 		data = TestData(u"Lorem ipsum dolor sit amet",
 				"consectetur adipisicing elit",
 				42)
-		serialized = dumps(data)
-		data2 = loads(serialized)
-		self.assertTrue(data == data2)
+
+		data2 = TestData(u"She's got both hands in her pockets",
+				"and she won't look at you won't look at you eh",
+				66,
+				23.54,
+				None,
+				True,
+				False,
+				u"Alejandro")
+		data2.nested = data
+
+		serialized = dumps(data2)
+		data3 = loads(serialized)
+		self.assertTrue(data2 == data3)

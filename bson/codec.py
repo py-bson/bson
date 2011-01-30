@@ -166,7 +166,8 @@ def decode_string_element(data, base):
 
 def encode_value(name, value, buf, traversal_stack, generator_func):
 	if isinstance(value, BSONCoding):
-		buf.write(encode_object_element(name, value))
+		buf.write(encode_object_element(name, value, traversal_stack,
+			generator_func))
 	elif isinstance(value, float):
 		buf.write(encode_double_element(name, value))
 	elif isinstance(value, unicode):

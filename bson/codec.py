@@ -89,8 +89,8 @@ def decode_object(raw_values):
 
 	retval = _EmptyClass()
 	retval.__class__ = cls
-	retval.bson_init(raw_values)
-	return retval
+	alt_retval = retval.bson_init(raw_values)
+	return alt_retval or retval
 
 # }}}
 # {{{ Codec Logic

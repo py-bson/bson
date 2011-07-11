@@ -111,14 +111,14 @@ def encode_cstring(value):
 	return value + "\x00"
 
 def decode_cstring(data, base):
-	buf = cStringIO.StringIO()
 	length = 0
-	for character in data[base:]:
+	max_length = len(data) - base
+	while length < max_length:
+		character = data[base + length]
 		length += 1
 		if character == "\x00":
 			break
-		buf.write(character)
-	return (base + length, buf.getvalue().decode("utf8"))
+	return (base + length, data[base:base + length - 1].decode("utf8"))
 
 def encode_binary(value):
 	length = len(value)

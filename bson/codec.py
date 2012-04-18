@@ -234,6 +234,8 @@ def decode_element(data, base):
 def decode_document(data, base):
 	length = struct.unpack("<i", data[base:base + 4])[0]
 	end_point = base + length
+	if data[end_point - 1] != '\0':
+		raise ValueError('missing null-terminator in document')
 	base += 4
 	retval = {}
 	while base < end_point - 1:

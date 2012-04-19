@@ -8,6 +8,7 @@ Base codec functions for bson.
 import struct
 import cStringIO
 import calendar, pytz
+import collections
 from datetime import datetime
 import warnings
 from abc import ABCMeta, abstractmethod
@@ -237,7 +238,7 @@ def decode_document(data, base):
 	if data[end_point - 1] != '\0':
 		raise ValueError('missing null-terminator in document')
 	base += 4
-	retval = {}
+	retval = collections.OrderedDict()
 	while base < end_point - 1:
 		base, name, value = decode_element(data, base)
 		retval[name] = value

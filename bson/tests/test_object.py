@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from bson import BSONCoding, dumps, loads, import_class
+from six import u
 from unittest import TestCase
 
 class TestData(BSONCoding):
@@ -30,18 +31,18 @@ class TestData(BSONCoding):
 class TestObjectCoding(TestCase):
 	def test_codec(self):
 		import_class(TestData)
-		data = TestData(u"Lorem ipsum dolor sit amet",
+		data = TestData(u("Lorem ipsum dolor sit amet"),
 				"consectetur adipisicing elit",
 				42)
 
-		data2 = TestData(u"She's got both hands in her pockets",
+		data2 = TestData(u("She's got both hands in her pockets"),
 				"and she won't look at you won't look at you eh",
 				66,
 				23.54,
 				None,
 				True,
 				False,
-				u"Alejandro")
+				u("Alejandro"))
 		data2.nested = data
 
 		serialized = dumps(data2)

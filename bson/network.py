@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 import socket
+
 try:
 	from cStringIO import StringIO
-except ImportError, e:
-	from StringIO import StringIO
+except ImportError:
+    from six import BytesIO as StringIO
+
 from struct import unpack
-from __init__ import dumps, loads
+from bson.__init__ import dumps, loads
 
 def _bintoint(data):
 	return unpack("<i", data)[0]

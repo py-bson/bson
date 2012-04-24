@@ -4,6 +4,7 @@ import os
 import sys
 import unittest
 import doctest
+import six
 
 here = os.path.dirname(__file__)
 
@@ -21,7 +22,8 @@ def test_suite():
 def additional_tests():
 	import bson 
 	suite = unittest.TestSuite()
-	suite.addTest(doctest.DocTestSuite(bson))
+	if not six.PY3:
+	    suite.addTest(doctest.DocTestSuite(bson))
 	return suite
 
 def main():

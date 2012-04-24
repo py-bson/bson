@@ -8,19 +8,19 @@ def populate(parent, howmany, max_children):
 	if howmany > max_children:
 		children = randint(2, max_children)
 		distribution = []
-		for i in xrange(0, children - 1):
+		for i in range(0, children - 1):
 			distribution.append(int(howmany / children))
 		distribution.append(howmany - sum(distribution, 0))
-		for i in xrange(0, children):
+		for i in range(0, children):
 			steal_target = randint(0, children - 1)
 			while steal_target == i:
 				steal_target = randint(0, children -1)
-			steal_count = randint(-1 * distribution[i],
-					distribution[steal_target]) / 2
+			steal_count = randint(int(-1 * distribution[i]),
+					int(distribution[steal_target]) / 2)
 			distribution[i] += steal_count
 			distribution[steal_target] -= steal_count
 		
-		for i in xrange(0, children):
+		for i in range(0, children):
 			make_dict = randint(0, 1)
 			baby = None
 			if make_dict:
@@ -36,7 +36,7 @@ def populate(parent, howmany, max_children):
 		populate_with_leaves(parent, howmany)
 
 def populate_with_leaves(parent, howmany):
-	for i in xrange(0, howmany):
+	for i in range(0, howmany):
 		leaf = os.urandom(4).encode("hex")
 		make_unicode = randint(0, 1)
 		if make_unicode:
@@ -48,7 +48,7 @@ def populate_with_leaves(parent, howmany):
 
 class TestRandomTree(TestCase):
 	def test_random_tree(self):
-		for i in xrange(0, 16):
+		for i in range(0, 16):
 			p = {}
 			populate(p, 256, 4)
 			sp = dumps(p)

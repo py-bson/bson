@@ -6,7 +6,13 @@
 Base codec functions for bson.
 """
 import struct
-import cStringIO
+import six
+
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from six import BytesIO as StringIO
+
 import calendar, pytz
 from datetime import datetime
 import warnings
@@ -71,7 +77,7 @@ def encode_object(obj, traversal_stack, generator_func):
 	return encode_document(values, traversal_stack, obj, generator_func)
 
 def encode_object_element(name, value, traversal_stack, generator_func):
-	return "\x03" + encode_cstring(name) + \
+	return six.b("\x03") + encode_cstring(name) + \
 			encode_object(value, traversal_stack,
 					generator_func = generator_func)
 
@@ -84,7 +90,7 @@ def decode_object(raw_values):
 	cls = None
 	try:
 		cls = classes[class_name]
-	except KeyError, e:
+	except KeyError:
 		raise MissingClassDefinition(class_name)
 
 	retval = _EmptyClass()
@@ -106,9 +112,9 @@ def decode_string(data, base):
 	return (base + 4 + length, value)
 
 def encode_cstring(value):
-	if isinstance(value, unicode):
+	if isinstance(value, six.text_type):
 		value = value.encode("utf8")
-	return value + "\x00"
+	return value + six.b("\x00")
 
 def decode_cstring(data, base):
 	length = 0
@@ -149,7 +155,7 @@ ELEMENT_TYPES = {
 	}
 
 def encode_double_element(name, value):
-	return "\x01" + encode_cstring(name) + encode_double(value)
+	return six.b("\x01") + encode_cstring(name) + encode_double(value)
 
 def decode_double_element(data, base):
 	base, name = decode_cstring(data, base + 1)
@@ -157,7 +163,7 @@ def decode_double_element(data, base):
 	return (base, name, value)
 
 def encode_string_element(name, value):
-	return "\x02" + encode_cstring(name) + encode_string(value)
+	return six.b("\x02") + encode_cstring(name) + encode_string(value)
 
 def decode_string_element(data, base):
 	base, name = decode_cstring(data, base + 1)
@@ -170,7 +176,7 @@ def encode_value(name, value, buf, traversal_stack, generator_func):
 			generator_func))
 	elif isinstance(value, float):
 		buf.write(encode_double_element(name, value))
-	elif isinstance(value, unicode):
+	elif isinstance(value, six.text_type):
 		buf.write(encode_string_element(name, value))
 	elif isinstance(value, dict):
 		buf.write(encode_document_element(name, value,
@@ -197,8 +203,8 @@ def encode_value(name, value, buf, traversal_stack, generator_func):
 def encode_document(obj, traversal_stack,
 		traversal_parent = None,
 		generator_func = None):
-	buf = cStringIO.StringIO()
-	key_iter = obj.iterkeys()
+	buf = StringIO()
+	key_iter = iter(obj.keys())
 	if generator_func is not None:
 		key_iter = generator_func(obj, traversal_stack)
 	for name in key_iter:
@@ -214,11 +220,11 @@ def encode_document(obj, traversal_stack,
 def encode_array(array, traversal_stack,
 		traversal_parent = None,
 		generator_func = None):
-	buf = cStringIO.StringIO()
-	for i in xrange(0, len(array)):
+	buf = StringIO()
+	for i in range(0, len(array)):
 		value = array[i]
 		traversal_stack.append(TraversalStep(traversal_parent or array, i))
-		encode_value(unicode(i), value, buf, traversal_stack, generator_func)
+		encode_value(six.text_type(i), value, buf, traversal_stack, generator_func)
 		traversal_stack.pop()
 	e_list = buf.getvalue()
 	e_list_length = len(e_list)
@@ -244,7 +250,7 @@ def decode_document(data, base):
 	return (end_point, retval)
 
 def encode_document_element(name, value, traversal_stack, generator_func):
-	return "\x03" + encode_cstring(name) + \
+	return six.b("\x03") + encode_cstring(name) + \
 			encode_document(value, traversal_stack,
 					generator_func = generator_func)
 
@@ -254,7 +260,7 @@ def decode_document_element(data, base):
 	return (base, name, value)
 
 def encode_array_element(name, value, traversal_stack, generator_func):
-	return "\x04" + encode_cstring(name) + \
+	return six.b("\x04") + encode_cstring(name) + \
 			encode_array(value, traversal_stack, generator_func = generator_func)
 
 def decode_array_element(data, base):
@@ -264,14 +270,14 @@ def decode_array_element(data, base):
 	try:
 		i = 0
 		while True:
-			retval.append(value[unicode(i)])
+			retval.append(value[six.text_type(i)])
 			i += 1
 	except KeyError:
 		pass
 	return (base, name, retval)
 
 def encode_binary_element(name, value):
-	return "\x05" + encode_cstring(name) + encode_binary(value)
+	return six.b("\x05") + encode_cstring(name) + encode_binary(value)
 
 def decode_binary_element(data, base):
 	base, name = decode_cstring(data, base + 1)
@@ -279,7 +285,7 @@ def decode_binary_element(data, base):
 	return (base, name, value)
 
 def encode_boolean_element(name, value):
-	return "\x08" + encode_cstring(name) + struct.pack("<b", value)
+	return six.b("\x08") + encode_cstring(name) + struct.pack("<b", value)
 
 def decode_boolean_element(data, base):
 	base, name = decode_cstring(data, base + 1)
@@ -291,7 +297,7 @@ def encode_UTCdatetime_element(name, value):
 		warnings.warn(MissingTimezoneWarning(), None, 4)
 	value = int(round(calendar.timegm(value.utctimetuple()) * 1000 +
 		(value.microsecond / 1000.0)))
-	return "\x09" + encode_cstring(name) + struct.pack("<q", value)
+	return six.b("\x09") + encode_cstring(name) + struct.pack("<q", value)
 
 def decode_UTCdatetime_element(data, base):
 	base, name = decode_cstring(data, base + 1)
@@ -300,14 +306,14 @@ def decode_UTCdatetime_element(data, base):
 	return (base + 8, name, value)
 
 def encode_none_element(name, value):
-	return "\x0a" + encode_cstring(name)
+	return six.b("\x0a") + encode_cstring(name)
 
 def decode_none_element(data, base):
 	base, name = decode_cstring(data, base + 1)
 	return (base, name, None)
 
 def encode_int32_element(name, value):
-	return "\x10" + encode_cstring(name) + struct.pack("<i", value)
+	return six.b("\x10") + encode_cstring(name) + struct.pack("<i", value)
 
 def decode_int32_element(data, base):
 	base, name = decode_cstring(data, base + 1)
@@ -315,7 +321,7 @@ def decode_int32_element(data, base):
 	return (base + 4, name, value)
 
 def encode_int64_element(name, value):
-	return "\x12" + encode_cstring(name) + struct.pack("<q", value)
+	return six.b("\x12") + encode_cstring(name) + struct.pack("<q", value)
 
 def decode_int64_element(data, base):
 	base, name = decode_cstring(data, base + 1)

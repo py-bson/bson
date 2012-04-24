@@ -21,29 +21,25 @@ For binaries, only the default 0x0 type is supported.
 
 
 >>> a = {
-...   u"Item A" : u"String item A",
-...   u"Item D" : {u"ROFLOL" : u"Blah blah blah"},
-...   u"Item C" : [1, 123456789012345, None, "Party and Bad Romance"],
-...   u"Item B" : u"\u4e00\u9580\u4e94\u5091"
+...   six.u("Item A") : six.u("String item A"),
+...   six.u("Item D") : {six.u("ROFLOL") : six.u("Blah blah blah")},
+...   six.u("Item C") : [1, 123456789012345, None, "Party and Bad Romance"],
+...   six.u("Item B") : six.u("\u4e00\u9580\u4e94\u5091")
 ... }
->>> def sorted(obj, dfs_stack):
-...   keys = obj.keys()
-...   keys.sort()
-...   for i in keys: yield i
+>>> def mysorted(obj, dfs_stack):
+...   return iter(sorted(obj.keys()))
 ... 
->>> def reverse(obj, dfs_stack):
-...   keys = obj.keys()
-...   keys.sort(reverse = True)
-...   for i in keys: yield i
+>>> def myreverse(obj, dfs_stack):
+...   return iter(sorted(obj.keys(), reverse=True))
 ... 
->>> serialized = dumps(a, sorted)
+>>> serialized = dumps(a, mysorted)
 >>> serialized
 '\\x9f\\x00\\x00\\x00\\x02Item A\\x00\\x0e\\x00\\x00\\x00String item A\\x00\\x02Item B\\x00\\r\\x00\\x00\\x00\\xe4\\xb8\\x80\\xe9\\x96\\x80\\xe4\\xba\\x94\\xe5\\x82\\x91\\x00\\x04Item C\\x007\\x00\\x00\\x00\\x100\\x00\\x01\\x00\\x00\\x00\\x121\\x00y\\xdf\\r\\x86Hp\\x00\\x00\\n2\\x00\\x053\\x00\\x15\\x00\\x00\\x00\\x00Party and Bad Romance\\x00\\x03Item D\\x00 \\x00\\x00\\x00\\x02ROFLOL\\x00\\x0f\\x00\\x00\\x00Blah blah blah\\x00\\x00\\x00'
 >>> 
 >>> b = loads(serialized)
 >>> b
 {u'Item C': [1, 123456789012345, None, 'Party and Bad Romance'], u'Item B': u'\\u4e00\\u9580\\u4e94\\u5091', u'Item A': u'String item A', u'Item D': {u'ROFLOL': u'Blah blah blah'}}
->>> reverse_serialized = dumps(a, reverse)
+>>> reverse_serialized = dumps(a, myreverse)
 >>> reverse_serialized
 '\\x9f\\x00\\x00\\x00\\x03Item D\\x00 \\x00\\x00\\x00\\x02ROFLOL\\x00\\x0f\\x00\\x00\\x00Blah blah blah\\x00\\x00\\x04Item C\\x007\\x00\\x00\\x00\\x100\\x00\\x01\\x00\\x00\\x00\\x121\\x00y\\xdf\\r\\x86Hp\\x00\\x00\\n2\\x00\\x053\\x00\\x15\\x00\\x00\\x00\\x00Party and Bad Romance\\x00\\x02Item B\\x00\\r\\x00\\x00\\x00\\xe4\\xb8\\x80\\xe9\\x96\\x80\\xe4\\xba\\x94\\xe5\\x82\\x91\\x00\\x02Item A\\x00\\x0e\\x00\\x00\\x00String item A\\x00\\x00'
 >>> c = loads(reverse_serialized)
@@ -51,8 +47,9 @@ For binaries, only the default 0x0 type is supported.
 {u'Item C': [1, 123456789012345, None, 'Party and Bad Romance'], u'Item B': u'\\u4e00\\u9580\\u4e94\\u5091', u'Item A': u'String item A', u'Item D': {u'ROFLOL': u'Blah blah blah'}}
 """
 
-from codec import *
-import network
+import six
+from bson.codec import *
+import bson.network
 __all__ = ["loads", "dumps"]
 
 # {{{ Serialization and Deserialization

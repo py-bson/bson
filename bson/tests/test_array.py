@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 from bson import dumps, loads
+from six import u
 from unittest import TestCase
 
 class TestArray(TestCase):
 	def setUp(self):
-		lyrics = u"""Viva La Vida lyrics
+		lyrics = u("""Viva La Vida lyrics
 
 		I used to rule the world
 		Seas would rise when I gave the word
@@ -60,8 +61,8 @@ class TestArray(TestCase):
 		For some reason I can't explain
 		I know Saint Peter won't call my name
 		Never an honest word
-		But that was when I ruled the world""".split(u"\n")
-		self.doc = {u"lyrics" : lyrics}
+		But that was when I ruled the world""").split(u("\n"))
+		self.doc = {u("lyrics") : lyrics}
 
 	def test_long_array(self):
 		serialized = dumps(self.doc)

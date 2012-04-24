@@ -17,5 +17,6 @@ setup(name = "bson",
 		platforms = "Any",
 		license = "BSD",
 		keywords = "BSON codec",
+		test_suite = "bson.tests",
 		url = "http://github.com/martinkou/bson"
 		)

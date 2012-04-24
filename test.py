@@ -3,7 +3,8 @@
 # Copyright (c) 2011, Kou Man Tong. All rights reserved.
 # For licensing, see LICENSE file included in the package.
 
+import sys
 import bson.tests
 
 if __name__ == "__main__":
-	bson.tests.main()
+	sys.exit(bson.tests.main())

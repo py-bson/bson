@@ -6,7 +6,7 @@
 Base codec functions for bson.
 """
 import struct
-import cStringIO
+import collections
 import calendar, pytz
 from datetime import datetime
 import warnings
@@ -25,6 +25,22 @@ class MissingTimezoneWarning(RuntimeWarning):
 		if len(args) < 1:
 			args.append("Input datetime object has no tzinfo, assuming UTC.")
 		super(MissingTimezoneWarning, self).__init__(*args)
+# }}}
+# {{{ Utility Classes
+class AppendOnlyStringIO:
+	def __init__(self):
+		self._deque = collections.deque()
+		self._position = 0
+	
+	def get_deque(self):
+		return self._deque
+	
+	def tell(self):
+		return self._position
+	
+	def write(self, s):
+		self._deque.append(s)
+		self._position += len(s)
 # }}}
 # {{{ Traversal Step
 class TraversalStep(object):
@@ -197,7 +213,7 @@ def encode_value(name, value, buf, traversal_stack, generator_func):
 def encode_document(obj, traversal_stack,
 		traversal_parent = None,
 		generator_func = None):
-	buf = cStringIO.StringIO()
+	buf = AppendOnlyStringIO()
 	key_iter = obj.iterkeys()
 	if generator_func is not None:
 		key_iter = generator_func(obj, traversal_stack)
@@ -206,24 +222,34 @@ def encode_document(obj, traversal_stack,
 		traversal_stack.append(TraversalStep(traversal_parent or obj, name))
 		encode_value(name, value, buf, traversal_stack, generator_func)
 		traversal_stack.pop()
-	e_list = buf.getvalue()
-	e_list_length = len(e_list)
-	return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1,
-			e_list, 0)
+	
+	data_length = buf.tell()
+	header = struct.pack("<i", data_length + 4 + 1)
+	end_byte = struct.pack("b", 0)
+	
+	e_deque = buf.get_deque()
+	e_deque.appendleft(header)
+	e_deque.append(end_byte)
+	return "".join(e_deque)
 
 def encode_array(array, traversal_stack,
 		traversal_parent = None,
 		generator_func = None):
-	buf = cStringIO.StringIO()
+	buf = AppendOnlyStringIO()
 	for i in xrange(0, len(array)):
 		value = array[i]
 		traversal_stack.append(TraversalStep(traversal_parent or array, i))
 		encode_value(unicode(i), value, buf, traversal_stack, generator_func)
 		traversal_stack.pop()
-	e_list = buf.getvalue()
-	e_list_length = len(e_list)
-	return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1,
-			e_list, 0)
+	
+	data_length = buf.tell()
+	header = struct.pack("<i", data_length + 4 + 1)
+	end_byte = struct.pack("b", 0)
+	
+	e_deque = buf.get_deque()
+	e_deque.appendleft(header)
+	e_deque.append(end_byte)
+	return "".join(e_deque)
 
 def decode_element(data, base):
 	element_type = struct.unpack("<b", data[base:base + 1])[0]

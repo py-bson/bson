@@ -306,19 +306,33 @@ def decode_none_element(data, base):
 	base, name = decode_cstring(data, base + 1)
 	return (base, name, None)
 
+def encode_int32(value):
+	return struct.pack("<i", value)
+
 def encode_int32_element(name, value):
-	return "\x10" + encode_cstring(name) + struct.pack("<i", value)
+	return "\x10" + encode_cstring(name) + encode_int32(value) 
+
+def decode_int32(data, base):
+	value = struct.unpack("<i", data[base:base + 4])[0]
+	return base + 4, value
 
 def decode_int32_element(data, base):
 	base, name = decode_cstring(data, base + 1)
-	value = struct.unpack("<i", data[base:base + 4])[0]
-	return (base + 4, name, value)
+	base_new, value = decode_int64(data,base)
+	return (base_new, name, value)
+
+def encode_int64(value):
+	return struct.pack("<q", value)
 
 def encode_int64_element(name, value):
-	return "\x12" + encode_cstring(name) + struct.pack("<q", value)
+	return "\x12" + encode_cstring(name) + encode_int64(value)
+
+def decode_int64(data, base):
+	value = struct.unpack("<q", data[base:base + 8])[0]
+	return base + 8, value
 
 def decode_int64_element(data, base):
 	base, name = decode_cstring(data, base + 1)
-	value = struct.unpack("<q", data[base:base + 8])[0]
-	return (base + 8, name, value)
+	base_new, value = decode_int64(data,base)
+	return (base_new, name, value)
 # }}}

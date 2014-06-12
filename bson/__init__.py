@@ -56,7 +56,7 @@ import network
 __all__ = ["loads", "dumps"]
 
 # {{{ Serialization and Deserialization
-def dumps(obj, generator = None):
+def dumps(obj, generator = None, on_unknown = None):
 	"""
 	Given a dict, outputs a BSON string.
 
@@ -65,8 +65,8 @@ def dumps(obj, generator = None):
 	the correct encoding order for keys.
 	"""
 	if isinstance(obj, BSONCoding):
-		return encode_object(obj, [], generator_func = generator)
-	return encode_document(obj, [], generator_func = generator)
+		return encode_object(obj, [], generator_func = generator, on_unknown = on_unknown)
+	return encode_document(obj, [], generator_func = generator, on_unknown = on_unknown)
 
 def loads(data):
 	"""

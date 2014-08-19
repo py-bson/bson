@@ -106,6 +106,8 @@ def decode_string(data, base):
 	return (base + 4 + length, value)
 
 def encode_cstring(value):
+	if isinstance(value, long) or isinstance(value, int):
+		value = str(value)
 	if isinstance(value, unicode):
 		value = value.encode("utf8")
 	return value + "\x00"

@@ -3,7 +3,7 @@
 import socket
 try:
 	from cStringIO import StringIO
-except ImportError, e:
+except ImportError:
 	from StringIO import StringIO
 from struct import unpack
 from __init__ import dumps, loads

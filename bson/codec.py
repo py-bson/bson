@@ -84,7 +84,7 @@ def decode_object(raw_values):
 	cls = None
 	try:
 		cls = classes[class_name]
-	except KeyError, e:
+	except KeyError:
 		raise MissingClassDefinition(class_name)
 
 	retval = _EmptyClass()

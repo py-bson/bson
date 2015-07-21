@@ -20,8 +20,7 @@ over-engineered:
 For binaries, only the default 0x0 type is supported.
 """
 
-from codec import *
-import network
+from .codec import *
 
 __all__ = ["loads", "dumps"]
 
@@ -62,7 +61,7 @@ def patch_socket():
         sendobj(obj) - sends a BSON document to the socket atomically.
     """
     from socket import socket
-
-    socket.recvbytes = network._recvbytes
-    socket.recvobj = network._recvobj
-    socket.sendobj = network._sendobj
+    from .network import _recvbytes, _recvobj, _sendobj
+    socket.recvbytes = _recvbytes
+    socket.recvobj = _recvobj
+    socket.sendobj = _sendobj

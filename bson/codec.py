@@ -75,9 +75,7 @@ def encode_object(obj, traversal_stack, generator_func):
 
 
 def encode_object_element(name, value, traversal_stack, generator_func):
-    return "\x03" + encode_cstring(name) + \
-            encode_object(value, traversal_stack,
-                    generator_func = generator_func)
+    return "\x03" + encode_cstring(name) + encode_object(value, traversal_stack, generator_func = generator_func)
 
 
 class _EmptyClass(object):
@@ -109,7 +107,7 @@ def decode_string(data, base):
     length = struct.unpack("<i", data[base:base + 4])[0]
     value = data[base + 4: base + 4 + length - 1]
     value = value.decode("utf8")
-    return (base + 4 + length, value)
+    return base + 4 + length, value
 
 
 def encode_cstring(value):
@@ -126,7 +124,7 @@ def decode_cstring(data, base):
         length += 1
         if character == "\x00":
             break
-    return (base + length, data[base:base + length - 1].decode("utf8"))
+    return base + length, data[base:base + length - 1].decode("utf8")
 
 
 def encode_binary(value):
@@ -136,7 +134,7 @@ def encode_binary(value):
 
 def decode_binary(data, base):
     length, binary_type = struct.unpack("<ib", data[base:base + 5])
-    return (base + 5 + length, data[base + 5:base + 5 + length])
+    return base + 5 + length, data[base + 5:base + 5 + length]
 
 
 def encode_double(value):
@@ -144,7 +142,7 @@ def encode_double(value):
 
 
 def decode_double(data, base):
-    return (base + 8, struct.unpack("<d", data[base: base + 8])[0])
+    return base + 8, struct.unpack("<d", data[base: base + 8])[0]
 
 
 ELEMENT_TYPES = {
@@ -168,7 +166,7 @@ def encode_double_element(name, value):
 def decode_double_element(data, base):
     base, name = decode_cstring(data, base + 1)
     base, value = decode_double(data, base)
-    return (base, name, value)
+    return base, name, value
 
 
 def encode_string_element(name, value):
@@ -178,22 +176,20 @@ def encode_string_element(name, value):
 def decode_string_element(data, base):
     base, name = decode_cstring(data, base + 1)
     base, value = decode_string(data, base)
-    return (base, name, value)
+    return base, name, value
+
 
 def encode_value(name, value, buf, traversal_stack, generator_func):
     if isinstance(value, BSONCoding):
-        buf.write(encode_object_element(name, value, traversal_stack,
-            generator_func))
+        buf.write(encode_object_element(name, value, traversal_stack, generator_func))
     elif isinstance(value, float):
         buf.write(encode_double_element(name, value))
     elif isinstance(value, unicode):
         buf.write(encode_string_element(name, value))
     elif isinstance(value, dict):
-        buf.write(encode_document_element(name, value,
-            traversal_stack, generator_func))
+        buf.write(encode_document_element(name, value, traversal_stack, generator_func))
     elif isinstance(value, list) or isinstance(value, tuple):
-        buf.write(encode_array_element(name, value,
-            traversal_stack, generator_func))
+        buf.write(encode_array_element(name, value, traversal_stack, generator_func))
     elif isinstance(value, str):
         buf.write(encode_binary_element(name, value))
     elif isinstance(value, bool):
@@ -255,7 +251,7 @@ def decode_document(data, base):
         retval[name] = value
     if "$$__CLASS_NAME__$$" in retval:
         retval = decode_object(retval)
-    return (end_point, retval)
+    return end_point, retval
 
 
 def encode_document_element(name, value, traversal_stack, generator_func):
@@ -265,11 +261,12 @@ def encode_document_element(name, value, traversal_stack, generator_func):
 def decode_document_element(data, base):
     base, name = decode_cstring(data, base + 1)
     base, value = decode_document(data, base)
-    return (base, name, value)
+    return base, name, value
 
 
 def encode_array_element(name, value, traversal_stack, generator_func):
     return "\x04" + encode_cstring(name) + encode_array(value, traversal_stack, generator_func=generator_func)
+
 
 def decode_array_element(data, base):
     base, name = decode_cstring(data, base + 1)
@@ -282,7 +279,7 @@ def decode_array_element(data, base):
             i += 1
     except KeyError:
         pass
-    return (base, name, retval)
+    return base, name, retval
 
 
 def encode_binary_element(name, value):
@@ -292,7 +289,7 @@ def encode_binary_element(name, value):
 def decode_binary_element(data, base):
     base, name = decode_cstring(data, base + 1)
     base, value = decode_binary(data, base)
-    return (base, name, value)
+    return base, name, value
 
 
 def encode_boolean_element(name, value):
@@ -302,7 +299,7 @@ def encode_boolean_element(name, value):
 def decode_boolean_element(data, base):
     base, name = decode_cstring(data, base + 1)
     value = not not struct.unpack("<b", data[base:base + 1])[0]
-    return (base + 1, name, value)
+    return base + 1, name, value
 
 
 def encode_UTCdatetime_element(name, value):
@@ -317,7 +314,8 @@ def decode_UTCdatetime_element(data, base):
     base, name = decode_cstring(data, base + 1)
     value = datetime.fromtimestamp(struct.unpack("<q",
         data[base:base + 8])[0] / 1000.0, pytz.utc)
-    return (base + 8, name, value)
+    return base + 8, name, value
+
 
 def encode_none_element(name, value):
     return "\x0a" + encode_cstring(name)
@@ -325,7 +323,7 @@ def encode_none_element(name, value):
 
 def decode_none_element(data, base):
     base, name = decode_cstring(data, base + 1)
-    return (base, name, None)
+    return base, name, None
 
 
 def encode_int32_element(name, value):
@@ -335,7 +333,7 @@ def encode_int32_element(name, value):
 def decode_int32_element(data, base):
     base, name = decode_cstring(data, base + 1)
     value = struct.unpack("<i", data[base:base + 4])[0]
-    return (base + 4, name, value)
+    return base + 4, name, value
 
 
 def encode_int64_element(name, value):
@@ -345,4 +343,4 @@ def encode_int64_element(name, value):
 def decode_int64_element(data, base):
     base, name = decode_cstring(data, base + 1)
     value = struct.unpack("<q", data[base:base + 8])[0]
-    return (base + 8, name, value)
+    return base + 8, name, value

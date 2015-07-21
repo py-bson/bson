@@ -1,12 +1,6 @@
 bson
 ====
 
-.. image:: https://pypip.in/v/bson/badge.svg?style=flat
-   :target: https://pypi.python.org/pypi/bson/
-   :alt: Latest Version
-.. image:: https://pypip.in/download/bson/badge.svg?period=month
-   :target: https://pypi.python.org/pypi/bson/
-   :alt: Downloads
 
 Independent BSON codec for Python that doesn't depend on MongoDB.
 

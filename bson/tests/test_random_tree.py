@@ -1,8 +1,10 @@
-from six.moves import xrange
-from bson import dumps, loads
+import os
 from random import randint
 from unittest import TestCase
-import os
+
+from six.moves import xrange
+
+from bson import dumps, loads
 
 
 def populate(parent, howmany, max_children):

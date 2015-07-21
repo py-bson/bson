@@ -1,7 +1,7 @@
 #!/usr/bin/env python
+from unittest import TestCase
 
 from bson import BSONCoding, dumps, loads, import_class
-from unittest import TestCase
 
 
 class TestData(BSONCoding):

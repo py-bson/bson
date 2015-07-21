@@ -6,14 +6,15 @@
 Base codec functions for bson.
 """
 import struct
-from six import StringIO
-from six import iterkeys
-from six import text_type
-from six.moves import xrange
-import calendar, pytz
-from datetime import datetime
 import warnings
+from datetime import datetime
 from abc import ABCMeta, abstractmethod
+
+import calendar
+import pytz
+from six import iterkeys, text_type
+from six import StringIO
+from six.moves import xrange
 
 
 class MissingClassDefinition(ValueError):

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-
+import doctest
 import os
 import sys
 import unittest
-import doctest
+
 
 here = os.path.dirname(__file__)
 

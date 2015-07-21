@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-
-import socket
-try:
-    from cStringIO import StringIO
-except ImportError, e:
-    from StringIO import StringIO
 from struct import unpack
-from __init__ import dumps, loads
+
+from six import StringIO
+
+from . import dumps, loads
 
 
 def _bintoint(data):

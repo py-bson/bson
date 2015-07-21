@@ -1,3 +1,4 @@
+from six.moves import xrange
 from bson import dumps, loads
 from random import randint
 from unittest import TestCase

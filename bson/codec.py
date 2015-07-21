@@ -6,7 +6,10 @@
 Base codec functions for bson.
 """
 import struct
-import cStringIO
+from six import StringIO
+from six import iterkeys
+from six import text_type
+from six.moves import xrange
 import calendar, pytz
 from datetime import datetime
 import warnings
@@ -88,7 +91,7 @@ def decode_object(raw_values):
     cls = None
     try:
         cls = classes[class_name]
-    except KeyError, e:
+    except KeyError:
         raise MissingClassDefinition(class_name)
 
     retval = _EmptyClass()
@@ -111,8 +114,8 @@ def decode_string(data, base):
 
 
 def encode_cstring(value):
-    if isinstance(value, unicode):
-        value = value.encode("utf8")
+    if isinstance(value, text_type):
+        value = value.encode("utf-8")
     return value + "\x00"
 
 
@@ -184,7 +187,7 @@ def encode_value(name, value, buf, traversal_stack, generator_func):
         buf.write(encode_object_element(name, value, traversal_stack, generator_func))
     elif isinstance(value, float):
         buf.write(encode_double_element(name, value))
-    elif isinstance(value, unicode):
+    elif isinstance(value, text_type):
         buf.write(encode_string_element(name, value))
     elif isinstance(value, dict):
         buf.write(encode_document_element(name, value, traversal_stack, generator_func))
@@ -208,8 +211,8 @@ def encode_value(name, value, buf, traversal_stack, generator_func):
 
 
 def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=None):
-    buf = cStringIO.StringIO()
-    key_iter = obj.iterkeys()
+    buf = StringIO()
+    key_iter = iterkeys(obj)
     if generator_func is not None:
         key_iter = generator_func(obj, traversal_stack)
     for name in key_iter:
@@ -223,11 +226,11 @@ def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=
 
 
 def encode_array(array, traversal_stack, traversal_parent = None, generator_func = None):
-    buf = cStringIO.StringIO()
+    buf = StringIO()
     for i in xrange(0, len(array)):
         value = array[i]
         traversal_stack.append(TraversalStep(traversal_parent or array, i))
-        encode_value(unicode(i), value, buf, traversal_stack, generator_func)
+        encode_value(text_type(i), value, buf, traversal_stack, generator_func)
         traversal_stack.pop()
     e_list = buf.getvalue()
     e_list_length = len(e_list)
@@ -275,7 +278,7 @@ def decode_array_element(data, base):
     try:
         i = 0
         while True:
-            retval.append(value[unicode(i)])
+            retval.append(value[text_type(i)])
             i += 1
     except KeyError:
         pass
@@ -305,15 +308,13 @@ def decode_boolean_element(data, base):
 def encode_UTCdatetime_element(name, value):
     if value.tzinfo is None:
         warnings.warn(MissingTimezoneWarning(), None, 4)
-    value = int(round(calendar.timegm(value.utctimetuple()) * 1000 +
-        (value.microsecond / 1000.0)))
+    value = int(round(calendar.timegm(value.utctimetuple()) * 1000 + (value.microsecond / 1000.0)))
     return "\x09" + encode_cstring(name) + struct.pack("<q", value)
 
 
 def decode_UTCdatetime_element(data, base):
     base, name = decode_cstring(data, base + 1)
-    value = datetime.fromtimestamp(struct.unpack("<q",
-        data[base:base + 8])[0] / 1000.0, pytz.utc)
+    value = datetime.fromtimestamp(struct.unpack("<q", data[base:base + 8])[0] / 1000.0, pytz.utc)
     return base + 8, name, value
 
 

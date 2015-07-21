@@ -75,7 +75,7 @@ def encode_object(obj, traversal_stack, generator_func):
 
 
 def encode_object_element(name, value, traversal_stack, generator_func):
-    return "\x03" + encode_cstring(name) + encode_object(value, traversal_stack, generator_func = generator_func)
+    return "\x03" + encode_cstring(name) + encode_object(value, traversal_stack, generator_func=generator_func)
 
 
 class _EmptyClass(object):

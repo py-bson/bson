@@ -4,7 +4,7 @@
 # Copyright (c) 2015, Ayun Park. All rights reserved.
 # For licensing, see LICENSE file included in the package.
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name="bson",
@@ -18,5 +18,5 @@ setup(
     platforms="Any",
     license="BSD",
     keywords="BSON codec",
-    url="http://github.com/Parkayun/bson"
+    url="http://github.com/martinkou/bson"
 )

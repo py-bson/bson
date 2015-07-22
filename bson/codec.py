@@ -104,10 +104,9 @@ def decode_object(raw_values):
 def encode_string(value):
     value = value.encode("utf8")
     length = len(value)
-    result = struct.pack("<i%dsb" % (length,), length + 1, value, 0)
     if PY3:
-        result = "".join(chr(c) for c in result)
-    return result
+        return "".join(chr(c) for c in struct.pack("<i%dsb" % (length,), length + 1, value, 0))
+    return struct.pack("<i%dsb" % (length,), length + 1, value, 0)
 
 
 def decode_string(data, base):
@@ -338,7 +337,7 @@ def decode_none_element(data, base):
 def encode_int32_element(name, value):
     value = struct.pack("<i", value)
     if PY3:
-        value = "".join(chr(s) for s in value)
+        return "\x10" + encode_cstring(name) + "".join(chr(s) for s in value)
     return "\x10" + encode_cstring(name) + value
 
 

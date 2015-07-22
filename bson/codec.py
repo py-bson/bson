@@ -104,7 +104,10 @@ def decode_object(raw_values):
 def encode_string(value):
     value = value.encode("utf8")
     length = len(value)
-    return struct.pack("<i%dsb" % (length,), length + 1, value, 0)
+    result = struct.pack("<i%dsb" % (length,), length + 1, value, 0)
+    if PY3:
+        result = "".join(chr(c) for c in result)
+    return result
 
 
 def decode_string(data, base):

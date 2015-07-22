@@ -13,7 +13,7 @@ from abc import ABCMeta, abstractmethod
 import calendar
 import pytz
 from six import iterkeys, text_type
-from six import PY2, StringIO
+from six import PY3, StringIO
 from six.moves import xrange
 
 
@@ -115,7 +115,7 @@ def decode_string(data, base):
 
 
 def encode_cstring(value):
-    if PY2 and isinstance(value, text_type):
+    if not PY3 and isinstance(value, text_type):
         value = value.encode("utf-8")
     return value + "\x00"
 
@@ -125,6 +125,8 @@ def decode_cstring(data, base):
     max_length = len(data) - base
     while length < max_length:
         character = data[base + length]
+        if PY3:
+            character = chr(character)
         length += 1
         if character == "\x00":
             break
@@ -222,7 +224,7 @@ def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=
         encode_value(name, value, buf, traversal_stack, generator_func)
         traversal_stack.pop()
     e_list = buf.getvalue()
-    if not PY2:
+    if PY3:
         e_list = e_list.encode("utf-8")
     e_list_length = len(e_list)
     return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
@@ -332,7 +334,7 @@ def decode_none_element(data, base):
 
 def encode_int32_element(name, value):
     value = struct.pack("<i", value)
-    if not PY2:
+    if PY3:
         value = "".join(chr(s) for s in value)
     return "\x10" + encode_cstring(name) + value
 

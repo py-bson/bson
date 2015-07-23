@@ -18,5 +18,5 @@ setup(
     platforms="Any",
     license="BSD",
     keywords="BSON codec",
-    url="http://github.com/martinkou/bson"
+    url="http://github.com/py-bson/bson"
 )

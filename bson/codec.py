@@ -117,7 +117,9 @@ def decode_string(data, base):
 
 
 def encode_cstring(value):
-    if not PY3 and isinstance(value, text_type):
+    if isinstance(value, long) or isinstance(value, int):
+        value = str(value)
+    elif not PY3 and isinstance(value, text_type):
         value = value.encode("utf-8")
     return value + "\x00"
 
@@ -254,6 +256,8 @@ def decode_element(data, base):
 def decode_document(data, base):
     length = struct.unpack("<i", data[base:base + 4])[0]
     end_point = base + length
+    if data[end_point - 1] != '\0':
+        raise ValueError('missing null-terminator in document')
     base += 4
     retval = {}
     while base < end_point - 1:

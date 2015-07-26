@@ -1,0 +1,9 @@
+language: python
+sudo: false
+python:
+- 2.6
+- 2.7
+instal:
+- pip install pytz>=2010b
+script
+- python test.py

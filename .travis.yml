@@ -5,5 +5,5 @@ python:
 - 2.7
 instal:
 - pip install pytz>=2010b
-script
+script:
 - python test.py

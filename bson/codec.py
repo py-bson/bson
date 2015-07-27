@@ -12,7 +12,7 @@ from abc import ABCMeta, abstractmethod
 
 import calendar
 import pytz
-from six import iterkeys, text_type
+from six import integer_types, iterkeys, text_type
 from six import PY3, StringIO
 from six.moves import xrange
 
@@ -117,7 +117,7 @@ def decode_string(data, base):
 
 
 def encode_cstring(value):
-    if isinstance(value, long) or isinstance(value, int):
+    if isinstance(value, integer_types):
         value = str(value)
     elif not PY3 and isinstance(value, text_type):
         value = value.encode("utf-8")
@@ -208,13 +208,14 @@ def encode_value(name, value, buf, traversal_stack, generator_func):
         buf.write(encode_UTCdatetime_element(name, value))
     elif value is None:
         buf.write(encode_none_element(name, value))
-    elif isinstance(value, int):
-        if value < -0x80000000 or value > 0x7fffffff:
+    elif isinstance(value, integer_types):
+        if not PY3 and isinstance(value, long):
             buf.write(encode_int64_element(name, value))
         else:
-            buf.write(encode_int32_element(name, value))
-    elif isinstance(value, long):
-        buf.write(encode_int64_element(name, value))
+            if value < -0x80000000 or value > 0x7fffffff:
+                buf.write(encode_int64_element(name, value))
+            else:
+                buf.write(encode_int32_element(name, value))
 
 
 def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=None):

@@ -148,6 +148,8 @@ def decode_binary(data, base):
 
 
 def encode_double(value):
+    if PY3:
+        return "".join(chr(c) for c in struct.pack("<d", value))
     return struct.pack("<d", value)
 
 

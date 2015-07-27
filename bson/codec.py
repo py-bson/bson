@@ -248,7 +248,9 @@ def encode_array(array, traversal_stack, traversal_parent = None, generator_func
     e_list_length = len(e_list)
     if PY3:
         e_list = e_list.encode("utf-8")
-        return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
+        return "".join(
+            chr(c) for c in struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
+        )
     return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
 
 

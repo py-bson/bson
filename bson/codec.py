@@ -310,6 +310,8 @@ def decode_binary_element(data, base):
 
 
 def encode_boolean_element(name, value):
+    if PY3:
+        return "\x08" + encode_cstring(name) + "".join(chr(s) for s in struct.pack("<b", value))
     return "\x08" + encode_cstring(name) + struct.pack("<b", value)
 
 

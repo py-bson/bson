@@ -321,6 +321,8 @@ def encode_UTCdatetime_element(name, value):
     if value.tzinfo is None:
         warnings.warn(MissingTimezoneWarning(), None, 4)
     value = int(round(calendar.timegm(value.utctimetuple()) * 1000 + (value.microsecond / 1000.0)))
+    if PY3:
+        return "\x09" + encode_cstring(name) + "".join(chr(c) for c in struct.pack("<q", value))
     return "\x09" + encode_cstring(name) + struct.pack("<q", value)
 
 

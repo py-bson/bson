@@ -230,11 +230,13 @@ def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=
         traversal_stack.append(TraversalStep(traversal_parent or obj, name))
         encode_value(name, value, buf, traversal_stack, generator_func)
         traversal_stack.pop()
-    e_list = buf.getvalue()
     if PY3:
-        e_list = e_list.encode("utf-8")
+        e_list = buf.getvalue().encode("utf-8")
+        e_list_length = len(e_list)
+        return "".join(chr(c) for c in struct.pack("<i%dsb" % (len(e_list),), e_list_length + 4 + 1, e_list, 0))
+    e_list = buf.getvalue()
     e_list_length = len(e_list)
-    return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
+    return struct.pack("<i%dsb" % (len(e_list),), e_list_length + 4 + 1, e_list, 0)
 
 
 def encode_array(array, traversal_stack, traversal_parent = None, generator_func = None):

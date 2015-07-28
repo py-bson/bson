@@ -6,6 +6,6 @@ python:
 - 3.3
 - 3.4
 install:
-- pip install pytz>=2010b
+- pip install pytz>=2010b six>=1.9.0
 script:
 - python test.py

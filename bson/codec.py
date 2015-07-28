@@ -104,8 +104,6 @@ def decode_object(raw_values):
 def encode_string(value):
     value = value.encode("utf8")
     length = len(value)
-    if PY3:
-        return "".join(chr(c) for c in struct.pack("<i%dsb" % (length,), length + 1, value, 0))
     return struct.pack("<i%dsb" % (length,), length + 1, value, 0)
 
 
@@ -148,8 +146,6 @@ def decode_binary(data, base):
 
 
 def encode_double(value):
-    if PY3:
-        return "".join(chr(c) for c in struct.pack("<d", value))
     return struct.pack("<d", value)
 
 
@@ -230,13 +226,9 @@ def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=
         traversal_stack.append(TraversalStep(traversal_parent or obj, name))
         encode_value(name, value, buf, traversal_stack, generator_func)
         traversal_stack.pop()
-    if PY3:
-        e_list = buf.getvalue().encode("utf-8")
-        e_list_length = len(e_list)
-        return "".join(chr(c) for c in struct.pack("<i%dsb" % (len(e_list),), e_list_length + 4 + 1, e_list, 0))
     e_list = buf.getvalue()
     e_list_length = len(e_list)
-    return struct.pack("<i%dsb" % (len(e_list),), e_list_length + 4 + 1, e_list, 0)
+    return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
 
 
 def encode_array(array, traversal_stack, traversal_parent = None, generator_func = None):
@@ -248,11 +240,6 @@ def encode_array(array, traversal_stack, traversal_parent = None, generator_func
         traversal_stack.pop()
     e_list = buf.getvalue()
     e_list_length = len(e_list)
-    if PY3:
-        e_list = e_list.encode("utf-8")
-        return "".join(
-            chr(c) for c in struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
-        )
     return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
 
 
@@ -317,8 +304,6 @@ def decode_binary_element(data, base):
 
 
 def encode_boolean_element(name, value):
-    if PY3:
-        return "\x08" + encode_cstring(name) + "".join(chr(s) for s in struct.pack("<b", value))
     return "\x08" + encode_cstring(name) + struct.pack("<b", value)
 
 
@@ -332,8 +317,6 @@ def encode_UTCdatetime_element(name, value):
     if value.tzinfo is None:
         warnings.warn(MissingTimezoneWarning(), None, 4)
     value = int(round(calendar.timegm(value.utctimetuple()) * 1000 + (value.microsecond / 1000.0)))
-    if PY3:
-        return "\x09" + encode_cstring(name) + "".join(chr(c) for c in struct.pack("<q", value))
     return "\x09" + encode_cstring(name) + struct.pack("<q", value)
 
 
@@ -354,8 +337,6 @@ def decode_none_element(data, base):
 
 def encode_int32_element(name, value):
     value = struct.pack("<i", value)
-    if PY3:
-        return "\x10" + encode_cstring(name) + "".join(chr(s) for s in value)
     return "\x10" + encode_cstring(name) + value
 
 

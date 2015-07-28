@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-
-from bson import dumps, loads
-from unittest import TestCase
-import pytz
 from datetime import datetime
+from unittest import TestCase
+
+import pytz
+from bson import dumps, loads
 
 class TestDateTime(TestCase):
     def test_datetime(self):

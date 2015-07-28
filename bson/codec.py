@@ -9,11 +9,14 @@ import struct
 import warnings
 from datetime import datetime
 from abc import ABCMeta, abstractmethod
+try:
+    from io import BytesIO as StringIO
+except ImportError:
+    from cStringIO import StringIO
 
 import calendar
 import pytz
-from six import integer_types, iterkeys, text_type
-from six import PY3, StringIO
+from six import integer_types, iterkeys, text_type, PY3
 from six.moves import xrange
 
 
@@ -79,7 +82,7 @@ def encode_object(obj, traversal_stack, generator_func):
 
 
 def encode_object_element(name, value, traversal_stack, generator_func):
-    return "\x03" + encode_cstring(name) + encode_object(value, traversal_stack, generator_func=generator_func)
+    return b"\x03" + encode_cstring(name) + encode_object(value, traversal_stack, generator_func=generator_func)
 
 
 class _EmptyClass(object):
@@ -117,9 +120,9 @@ def decode_string(data, base):
 def encode_cstring(value):
     if isinstance(value, integer_types):
         value = str(value)
-    elif not PY3 and isinstance(value, text_type):
+    if isinstance(value, text_type):
         value = value.encode("utf-8")
-    return value + "\x00"
+    return value + b"\x00"
 
 
 def decode_cstring(data, base):
@@ -168,7 +171,7 @@ ELEMENT_TYPES = {
 
 
 def encode_double_element(name, value):
-    return "\x01" + encode_cstring(name) + encode_double(value)
+    return b"\x01" + encode_cstring(name) + encode_double(value)
 
 
 def decode_double_element(data, base):
@@ -178,7 +181,7 @@ def decode_double_element(data, base):
 
 
 def encode_string_element(name, value):
-    return "\x02" + encode_cstring(name) + encode_string(value)
+    return b"\x02" + encode_cstring(name) + encode_string(value)
 
 
 def decode_string_element(data, base):
@@ -253,7 +256,8 @@ def decode_element(data, base):
 def decode_document(data, base):
     length = struct.unpack("<i", data[base:base + 4])[0]
     end_point = base + length
-    if data[end_point - 1] != '\0':
+    if data[end_point - 1] not in ('\0', 0):
+        print(type(data[end_point - 1]))
         raise ValueError('missing null-terminator in document')
     base += 4
     retval = {}
@@ -266,7 +270,7 @@ def decode_document(data, base):
 
 
 def encode_document_element(name, value, traversal_stack, generator_func):
-    return "\x03" + encode_cstring(name) + encode_document(value, traversal_stack, generator_func=generator_func)
+    return b"\x03" + encode_cstring(name) + encode_document(value, traversal_stack, generator_func=generator_func)
 
 
 def decode_document_element(data, base):
@@ -276,7 +280,7 @@ def decode_document_element(data, base):
 
 
 def encode_array_element(name, value, traversal_stack, generator_func):
-    return "\x04" + encode_cstring(name) + encode_array(value, traversal_stack, generator_func=generator_func)
+    return b"\x04" + encode_cstring(name) + encode_array(value, traversal_stack, generator_func=generator_func)
 
 
 def decode_array_element(data, base):
@@ -294,7 +298,7 @@ def decode_array_element(data, base):
 
 
 def encode_binary_element(name, value):
-    return "\x05" + encode_cstring(name) + encode_binary(value)
+    return b"\x05" + encode_cstring(name) + encode_binary(value)
 
 
 def decode_binary_element(data, base):
@@ -304,7 +308,7 @@ def decode_binary_element(data, base):
 
 
 def encode_boolean_element(name, value):
-    return "\x08" + encode_cstring(name) + struct.pack("<b", value)
+    return b"\x08" + encode_cstring(name) + struct.pack("<b", value)
 
 
 def decode_boolean_element(data, base):
@@ -317,7 +321,7 @@ def encode_UTCdatetime_element(name, value):
     if value.tzinfo is None:
         warnings.warn(MissingTimezoneWarning(), None, 4)
     value = int(round(calendar.timegm(value.utctimetuple()) * 1000 + (value.microsecond / 1000.0)))
-    return "\x09" + encode_cstring(name) + struct.pack("<q", value)
+    return b"\x09" + encode_cstring(name) + struct.pack("<q", value)
 
 
 def decode_UTCdatetime_element(data, base):
@@ -327,7 +331,7 @@ def decode_UTCdatetime_element(data, base):
 
 
 def encode_none_element(name, value):
-    return "\x0a" + encode_cstring(name)
+    return b"\x0a" + encode_cstring(name)
 
 
 def decode_none_element(data, base):
@@ -337,7 +341,7 @@ def decode_none_element(data, base):
 
 def encode_int32_element(name, value):
     value = struct.pack("<i", value)
-    return "\x10" + encode_cstring(name) + value
+    return b"\x10" + encode_cstring(name) + value
 
 
 def decode_int32_element(data, base):
@@ -347,7 +351,7 @@ def decode_int32_element(data, base):
 
 
 def encode_int64_element(name, value):
-    return "\x12" + encode_cstring(name) + struct.pack("<q", value)
+    return b"\x12" + encode_cstring(name) + struct.pack("<q", value)
 
 
 def decode_int64_element(data, base):

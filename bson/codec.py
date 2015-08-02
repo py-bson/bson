@@ -106,7 +106,7 @@ def decode_object(raw_values):
 
 
 def encode_string(value):
-    value = value.encode("utf8")
+    value = value.encode("utf-8")
     length = len(value)
     return struct.pack("<i%dsb" % (length,), length + 1, value, 0)
 
@@ -114,7 +114,7 @@ def encode_string(value):
 def decode_string(data, base):
     length = struct.unpack("<i", data[base:base + 4])[0]
     value = data[base + 4: base + 4 + length - 1]
-    value = value.decode("utf8")
+    value = value.decode("utf-8")
     return base + 4 + length, value
 
 
@@ -136,7 +136,7 @@ def decode_cstring(data, base):
         length += 1
         if character == "\x00":
             break
-    return base + length, data[base:base + length - 1].decode("utf8")
+    return base + length, data[base:base + length - 1].decode("utf-8")
 
 
 def encode_binary(value):

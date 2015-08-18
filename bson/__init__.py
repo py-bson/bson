@@ -24,6 +24,7 @@ from .codec import *
 
 __all__ = ["loads", "dumps"]
 
+<<<<<<< HEAD
 
 def dumps(obj, generator=None):
     """
@@ -37,6 +38,20 @@ def dumps(obj, generator=None):
         return encode_object(obj, [], generator_func=generator)
     return encode_document(obj, [], generator_func=generator)
 
+=======
+# {{{ Serialization and Deserialization
+def dumps(obj, generator = None, on_unknown = None):
+	"""
+	Given a dict, outputs a BSON string.
+
+	generator is an optional function which accepts the dictionary/array being
+	encoded, the current DFS traversal stack, and outputs an iterator indicating
+	the correct encoding order for keys.
+	"""
+	if isinstance(obj, BSONCoding):
+		return encode_object(obj, [], generator_func = generator, on_unknown = on_unknown)
+	return encode_document(obj, [], generator_func = generator, on_unknown = on_unknown)
+>>>>>>> 0f328210e372ca9336337ff2afe44d465e9ac0f8
 
 def loads(data):
     """

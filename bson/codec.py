@@ -202,7 +202,7 @@ def encode_value(name, value, buf, traversal_stack, generator_func):
         buf.write(encode_document_element(name, value, traversal_stack, generator_func))
     elif isinstance(value, list) or isinstance(value, tuple):
         buf.write(encode_array_element(name, value, traversal_stack, generator_func))
-    elif isinstance(value, str):
+    elif isinstance(value, str) or isinstance(value, bytes):
         buf.write(encode_binary_element(name, value))
     elif isinstance(value, bool):
         buf.write(encode_boolean_element(name, value))

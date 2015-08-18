@@ -22,21 +22,14 @@ from six.moves import xrange
 
 
 class MissingClassDefinition(ValueError):
-<<<<<<< HEAD
     def __init__(self, class_name):
         super(MissingClassDefinition, self).__init__("No class definition for class %s" % (class_name,))
 
 
-=======
-	def __init__(self, class_name):
-		super(MissingClassDefinition, self).__init__(
-		"No class definition for class %s" % (class_name,))
-
 class UnknownSerializerError(ValueError):
-	pass
-# }}}
-# {{{ Warning Classes
->>>>>>> 0f328210e372ca9336337ff2afe44d465e9ac0f8
+    pass
+
+
 class MissingTimezoneWarning(RuntimeWarning):
     def __init__(self, *args):
         args = list(args)
@@ -86,30 +79,16 @@ def import_classes_from_modules(*args):
                 import_class(item)
 
 
-<<<<<<< HEAD
-def encode_object(obj, traversal_stack, generator_func):
+def encode_object(obj, traversal_stack, generator_func, on_unknown=None):
     values = obj.bson_encode()
     class_name = obj.__class__.__name__
     values["$$__CLASS_NAME__$$"] = class_name
-    return encode_document(values, traversal_stack, obj, generator_func)
+    return encode_document(values, traversal_stack, obj, generator_func, on_unknown)
 
-
-def encode_object_element(name, value, traversal_stack, generator_func):
-    return b"\x03" + encode_cstring(name) + encode_object(value, traversal_stack, generator_func=generator_func)
-
-=======
-def encode_object(obj, traversal_stack, generator_func, on_unknown=None):
-	values = obj.bson_encode()
-	class_name = obj.__class__.__name__
-	values["$$__CLASS_NAME__$$"] = class_name
-	return encode_document(values, traversal_stack, obj, generator_func, on_unknown)
 
 def encode_object_element(name, value, traversal_stack, generator_func, on_unknown):
-	return "\x03" + encode_cstring(name) + \
-			encode_object(value, traversal_stack,
-					generator_func = generator_func,
-					on_unknown = on_unknown)
->>>>>>> 0f328210e372ca9336337ff2afe44d465e9ac0f8
+    return b"\x03" + encode_cstring(name) + encode_object(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
+
 
 class _EmptyClass(object):
     pass
@@ -183,32 +162,17 @@ def decode_double(data, base):
 
 
 ELEMENT_TYPES = {
-<<<<<<< HEAD
-    0x01: "double",
-    0x02: "string",
-    0x03: "document",
-    0x04: "array",
-    0x05: "binary",
-    0x08: "boolean",
-    0x09: "UTCdatetime",
-    0x0A: "none",
-    0x10: "int32",
-    0x12: "int64"
+    0x01 : "double",
+    0x02 : "string",
+    0x03 : "document",
+    0x04 : "array",
+    0x05 : "binary",
+    0x08 : "boolean",
+    0x09 : "UTCdatetime",
+    0x0A : "none",
+    0x10 : "int32",
+    0x12 : "int64"
 }
-
-=======
-		0x01 : "double",
-		0x02 : "string",
-		0x03 : "document",
-		0x04 : "array",
-		0x05 : "binary",
-		0x08 : "boolean",
-		0x09 : "UTCdatetime",
-		0x0A : "none",
-		0x10 : "int32",
-		0x12 : "int64"
-	}
->>>>>>> 0f328210e372ca9336337ff2afe44d465e9ac0f8
 
 def encode_double_element(name, value):
     return b"\x01" + encode_cstring(name) + encode_double(value)
@@ -230,18 +194,17 @@ def decode_string_element(data, base):
     return base, name, value
 
 
-<<<<<<< HEAD
-def encode_value(name, value, buf, traversal_stack, generator_func):
+def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=None):
     if isinstance(value, BSONCoding):
-        buf.write(encode_object_element(name, value, traversal_stack, generator_func))
+        buf.write(encode_object_element(name, value, traversal_stack, generator_func, on_unknown))
     elif isinstance(value, float):
         buf.write(encode_double_element(name, value))
     elif isinstance(value, text_type):
         buf.write(encode_string_element(name, value))
     elif isinstance(value, dict):
-        buf.write(encode_document_element(name, value, traversal_stack, generator_func))
+        buf.write(encode_document_element(name, value, traversal_stack, generator_func, on_unknown))
     elif isinstance(value, list) or isinstance(value, tuple):
-        buf.write(encode_array_element(name, value, traversal_stack, generator_func))
+        buf.write(encode_array_element(name, value, traversal_stack, generator_func, on_unknown))
     elif isinstance(value, str):
         buf.write(encode_binary_element(name, value))
     elif isinstance(value, bool):
@@ -258,9 +221,14 @@ def encode_value(name, value, buf, traversal_stack, generator_func):
                 buf.write(encode_int64_element(name, value))
             else:
                 buf.write(encode_int32_element(name, value))
+    else:
+        if on_unknown is not None:
+            encode_value(name, on_unknown(value), buf, traversal_stack, generator_func, on_unknown)
+        else:
+            raise UnknownSerializerError()
 
 
-def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=None):
+def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=None, on_unknown=None):
     buf = StringIO()
     key_iter = iterkeys(obj)
     if generator_func is not None:
@@ -268,98 +236,24 @@ def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=
     for name in key_iter:
         value = obj[name]
         traversal_stack.append(TraversalStep(traversal_parent or obj, name))
-        encode_value(name, value, buf, traversal_stack, generator_func)
+        encode_value(name, value, buf, traversal_stack, generator_func, on_unknown)
         traversal_stack.pop()
     e_list = buf.getvalue()
     e_list_length = len(e_list)
     return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
 
 
-def encode_array(array, traversal_stack, traversal_parent = None, generator_func = None):
+def encode_array(array, traversal_stack, traversal_parent = None, generator_func = None, on_unknown = None):
     buf = StringIO()
     for i in xrange(0, len(array)):
         value = array[i]
         traversal_stack.append(TraversalStep(traversal_parent or array, i))
-        encode_value(text_type(i), value, buf, traversal_stack, generator_func)
+        encode_value(text_type(i), value, buf, traversal_stack, generator_func, on_unknown)
         traversal_stack.pop()
     e_list = buf.getvalue()
     e_list_length = len(e_list)
     return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
 
-=======
-def encode_value(name, value, buf, traversal_stack, generator_func,
-		 on_unknown = None):
-	if isinstance(value, BSONCoding):
-		buf.write(encode_object_element(name, value, traversal_stack,
-			generator_func, on_unknown))
-	elif isinstance(value, float):
-		buf.write(encode_double_element(name, value))
-	elif isinstance(value, unicode):
-		buf.write(encode_string_element(name, value))
-	elif isinstance(value, dict):
-		buf.write(encode_document_element(name, value,
-			traversal_stack, generator_func, on_unknown))
-	elif isinstance(value, list) or isinstance(value, tuple):
-		buf.write(encode_array_element(name, value,
-			traversal_stack, generator_func, on_unknown))
-	elif isinstance(value, str):
-		buf.write(encode_binary_element(name, value))
-	elif isinstance(value, bool):
-		buf.write(encode_boolean_element(name, value))
-	elif isinstance(value, datetime):
-		buf.write(encode_UTCdatetime_element(name, value))
-	elif value is None:
-		buf.write(encode_none_element(name, value))
-	elif isinstance(value, int):
-		if value < -0x80000000 or value > 0x7fffffff:
-			buf.write(encode_int64_element(name, value))
-		else:
-			buf.write(encode_int32_element(name, value))
-	elif isinstance(value, long):
-		buf.write(encode_int64_element(name, value))
-	else:
-		if on_unknown is not None:
-			encode_value(name, on_unknown(value), buf, traversal_stack,
-				     generator_func, on_unknown)
-		else:
-			raise UnknownSerializerError()
-
-
-def encode_document(obj, traversal_stack,
-		traversal_parent = None,
-		generator_func = None,
-		on_unknown = None):
-	buf = cStringIO.StringIO()
-	key_iter = obj.iterkeys()
-	if generator_func is not None:
-		key_iter = generator_func(obj, traversal_stack)
-	for name in key_iter:
-		value = obj[name]
-		traversal_stack.append(TraversalStep(traversal_parent or obj, name))
-		encode_value(name, value, buf, traversal_stack, generator_func,
-			     on_unknown)
-		traversal_stack.pop()
-	e_list = buf.getvalue()
-	e_list_length = len(e_list)
-	return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1,
-			e_list, 0)
-
-def encode_array(array, traversal_stack,
-		traversal_parent = None,
-		generator_func = None,
-		on_unknown = None):
-	buf = cStringIO.StringIO()
-	for i in xrange(0, len(array)):
-		value = array[i]
-		traversal_stack.append(TraversalStep(traversal_parent or array, i))
-		encode_value(unicode(i), value, buf, traversal_stack, generator_func,
-			     on_unknown)
-		traversal_stack.pop()
-	e_list = buf.getvalue()
-	e_list_length = len(e_list)
-	return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1,
-			e_list, 0)
->>>>>>> 0f328210e372ca9336337ff2afe44d465e9ac0f8
 
 def decode_element(data, base):
     element_type = struct.unpack("<b", data[base:base + 1])[0]
@@ -384,17 +278,9 @@ def decode_document(data, base):
     return end_point, retval
 
 
-<<<<<<< HEAD
-def encode_document_element(name, value, traversal_stack, generator_func):
-    return b"\x03" + encode_cstring(name) + encode_document(value, traversal_stack, generator_func=generator_func)
-
-=======
 def encode_document_element(name, value, traversal_stack, generator_func, on_unknown):
-	return "\x03" + encode_cstring(name) + \
-			encode_document(value, traversal_stack,
-					generator_func = generator_func,
-					on_unknown = on_unknown)
->>>>>>> 0f328210e372ca9336337ff2afe44d465e9ac0f8
+    return b"\x03" + encode_cstring(name) + encode_document(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
+
 
 def decode_document_element(data, base):
     base, name = decode_cstring(data, base + 1)
@@ -402,17 +288,9 @@ def decode_document_element(data, base):
     return base, name, value
 
 
-<<<<<<< HEAD
-def encode_array_element(name, value, traversal_stack, generator_func):
-    return b"\x04" + encode_cstring(name) + encode_array(value, traversal_stack, generator_func=generator_func)
-
-=======
 def encode_array_element(name, value, traversal_stack, generator_func, on_unknown):
-	return "\x04" + encode_cstring(name) + \
-			encode_array(value, traversal_stack,
-				     generator_func = generator_func,
-				     on_unknown = on_unknown)
->>>>>>> 0f328210e372ca9336337ff2afe44d465e9ac0f8
+    return b"\x04" + encode_cstring(name) + encode_array(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
+
 
 def decode_array_element(data, base):
     base, name = decode_cstring(data, base + 1)

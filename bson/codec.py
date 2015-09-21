@@ -119,6 +119,10 @@ def decode_string(data, base):
 
 
 def encode_cstring(value):
+    if "\x00" in value:
+        raise ValueError("Element names may not include NUL bytes.")
+        # A NUL byte is used to delimit our string, accepting one would cause
+        # our string to terminate early.
     if isinstance(value, integer_types):
         value = str(value)
     if isinstance(value, text_type):

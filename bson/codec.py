@@ -123,6 +123,10 @@ def decode_string(data, base):
 
 
 def encode_cstring(value):
+    if "\x00" in value:
+        raise ValueError("Element names may not include NUL bytes.")
+        # A NUL byte is used to delimit our string, accepting one would cause
+        # our string to terminate early.
     if isinstance(value, integer_types):
         value = str(value)
     if isinstance(value, text_type):
@@ -207,7 +211,7 @@ def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=N
     elif isinstance(value, list) or isinstance(value, tuple):
         buf.write(encode_array_element(name, value, traversal_stack, generator_func, on_unknown))
     elif isinstance(value, str) or isinstance(value, bytes):
-        buf.write(encode_array_element(name, value, traversal_stack, generator_func))
+        buf.write(encode_binary_element(name, value))
     elif isinstance(value, bool):
         buf.write(encode_boolean_element(name, value))
     elif isinstance(value, datetime):

@@ -162,16 +162,16 @@ def decode_double(data, base):
 
 
 ELEMENT_TYPES = {
-    0x01 : "double",
-    0x02 : "string",
-    0x03 : "document",
-    0x04 : "array",
-    0x05 : "binary",
-    0x08 : "boolean",
-    0x09 : "UTCdatetime",
-    0x0A : "none",
-    0x10 : "int32",
-    0x12 : "int64"
+    0x01: "double",
+    0x02: "string",
+    0x03: "document",
+    0x04: "array",
+    0x05: "binary",
+    0x08: "boolean",
+    0x09: "UTCdatetime",
+    0x0A: "none",
+    0x10: "int32",
+    0x12: "int64"
 }
 
 def encode_double_element(name, value):

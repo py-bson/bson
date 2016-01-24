@@ -26,6 +26,10 @@ class MissingClassDefinition(ValueError):
         super(MissingClassDefinition, self).__init__("No class definition for class %s" % (class_name,))
 
 
+class UnknownSerializerError(ValueError):
+    pass
+
+
 class MissingTimezoneWarning(RuntimeWarning):
     def __init__(self, *args):
         args = list(args)
@@ -75,15 +79,15 @@ def import_classes_from_modules(*args):
                 import_class(item)
 
 
-def encode_object(obj, traversal_stack, generator_func):
+def encode_object(obj, traversal_stack, generator_func, on_unknown=None):
     values = obj.bson_encode()
     class_name = obj.__class__.__name__
     values["$$__CLASS_NAME__$$"] = class_name
-    return encode_document(values, traversal_stack, obj, generator_func)
+    return encode_document(values, traversal_stack, obj, generator_func, on_unknown)
 
 
-def encode_object_element(name, value, traversal_stack, generator_func):
-    return b"\x03" + encode_cstring(name) + encode_object(value, traversal_stack, generator_func=generator_func)
+def encode_object_element(name, value, traversal_stack, generator_func, on_unknown):
+    return b"\x03" + encode_cstring(name) + encode_object(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
 
 
 class _EmptyClass(object):
@@ -119,10 +123,6 @@ def decode_string(data, base):
 
 
 def encode_cstring(value):
-    if "\x00" in value:
-        raise ValueError("Element names may not include NUL bytes.")
-        # A NUL byte is used to delimit our string, accepting one would cause
-        # our string to terminate early.
     if isinstance(value, integer_types):
         value = str(value)
     if isinstance(value, text_type):
@@ -195,19 +195,19 @@ def decode_string_element(data, base):
     return base, name, value
 
 
-def encode_value(name, value, buf, traversal_stack, generator_func):
+def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=None):
     if isinstance(value, BSONCoding):
-        buf.write(encode_object_element(name, value, traversal_stack, generator_func))
+        buf.write(encode_object_element(name, value, traversal_stack, generator_func, on_unknown))
     elif isinstance(value, float):
         buf.write(encode_double_element(name, value))
     elif isinstance(value, text_type):
         buf.write(encode_string_element(name, value))
     elif isinstance(value, dict):
-        buf.write(encode_document_element(name, value, traversal_stack, generator_func))
+        buf.write(encode_document_element(name, value, traversal_stack, generator_func, on_unknown))
     elif isinstance(value, list) or isinstance(value, tuple):
-        buf.write(encode_array_element(name, value, traversal_stack, generator_func))
+        buf.write(encode_array_element(name, value, traversal_stack, generator_func, on_unknown))
     elif isinstance(value, str) or isinstance(value, bytes):
-        buf.write(encode_binary_element(name, value))
+        buf.write(encode_array_element(name, value, traversal_stack, generator_func))
     elif isinstance(value, bool):
         buf.write(encode_boolean_element(name, value))
     elif isinstance(value, datetime):
@@ -222,9 +222,14 @@ def encode_value(name, value, buf, traversal_stack, generator_func):
                 buf.write(encode_int64_element(name, value))
             else:
                 buf.write(encode_int32_element(name, value))
+    else:
+        if on_unknown is not None:
+            encode_value(name, on_unknown(value), buf, traversal_stack, generator_func, on_unknown)
+        else:
+            raise UnknownSerializerError()
 
 
-def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=None):
+def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=None, on_unknown=None):
     buf = StringIO()
     key_iter = iterkeys(obj)
     if generator_func is not None:
@@ -232,19 +237,19 @@ def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=
     for name in key_iter:
         value = obj[name]
         traversal_stack.append(TraversalStep(traversal_parent or obj, name))
-        encode_value(name, value, buf, traversal_stack, generator_func)
+        encode_value(name, value, buf, traversal_stack, generator_func, on_unknown)
         traversal_stack.pop()
     e_list = buf.getvalue()
     e_list_length = len(e_list)
     return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
 
 
-def encode_array(array, traversal_stack, traversal_parent = None, generator_func = None):
+def encode_array(array, traversal_stack, traversal_parent = None, generator_func = None, on_unknown = None):
     buf = StringIO()
     for i in xrange(0, len(array)):
         value = array[i]
         traversal_stack.append(TraversalStep(traversal_parent or array, i))
-        encode_value(text_type(i), value, buf, traversal_stack, generator_func)
+        encode_value(text_type(i), value, buf, traversal_stack, generator_func, on_unknown)
         traversal_stack.pop()
     e_list = buf.getvalue()
     e_list_length = len(e_list)
@@ -274,8 +279,8 @@ def decode_document(data, base):
     return end_point, retval
 
 
-def encode_document_element(name, value, traversal_stack, generator_func):
-    return b"\x03" + encode_cstring(name) + encode_document(value, traversal_stack, generator_func=generator_func)
+def encode_document_element(name, value, traversal_stack, generator_func, on_unknown):
+    return b"\x03" + encode_cstring(name) + encode_document(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
 
 
 def decode_document_element(data, base):
@@ -284,8 +289,8 @@ def decode_document_element(data, base):
     return base, name, value
 
 
-def encode_array_element(name, value, traversal_stack, generator_func):
-    return b"\x04" + encode_cstring(name) + encode_array(value, traversal_stack, generator_func=generator_func)
+def encode_array_element(name, value, traversal_stack, generator_func, on_unknown):
+    return b"\x04" + encode_cstring(name) + encode_array(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
 
 
 def decode_array_element(data, base):

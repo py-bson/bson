@@ -10,6 +10,6 @@ class TestUnknownHandler(TestCase):
         obj = {"decimal": d}
 
         serialized = dumps(obj, on_unknown=float)
-	unserialized = loads(serialized)
-	self.assertEqual(float(d), unserialized["decimal"])
+        unserialized = loads(serialized)
+        self.assertEqual(float(d), unserialized["decimal"])
 

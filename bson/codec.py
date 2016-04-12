@@ -17,6 +17,8 @@ except ImportError:
 
 import calendar
 import pytz
+from binascii import b2a_hex
+
 from six import integer_types, iterkeys, text_type, PY3
 from six.moves import xrange
 
@@ -171,6 +173,7 @@ ELEMENT_TYPES = {
     0x03: "document",
     0x04: "array",
     0x05: "binary",
+    0x07: "object_id",
     0x08: "boolean",
     0x09: "UTCdatetime",
     0x0A: "none",
@@ -371,3 +374,13 @@ def decode_int64_element(data, base):
     base, name = decode_cstring(data, base + 1)
     value = struct.unpack("<q", data[base:base + 8])[0]
     return base + 8, name, value
+
+
+def encode_object_id_element(name, value):
+    return b"\x07" + encode_cstring(name) + value
+
+
+def decode_object_id_element(data, base):
+    base, name = decode_cstring(data, base + 1)
+    value = b2a_hex(data[base:base + 12])
+    return base + 12, name, value

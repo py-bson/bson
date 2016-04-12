@@ -271,7 +271,6 @@ def decode_document(data, base):
     length = struct.unpack("<i", data[base:base + 4])[0]
     end_point = base + length
     if data[end_point - 1] not in ('\0', 0):
-        print(type(data[end_point - 1]))
         raise ValueError('missing null-terminator in document')
     base += 4
     retval = {}

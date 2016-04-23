@@ -21,7 +21,7 @@ class NewInstall(install):
 
     def run(self):
         install.run(self)
-        if not self.check_pymongo():
+        if self.check_pymongo():
             sys.stdout.write('\033[31mCaution! \033[33mbson(pymongo) is already installed.\033[0m\n')
 
 

@@ -131,7 +131,7 @@ def encode_cstring(value):
         # our string to terminate early.
     if isinstance(value, integer_types):
         value = str(value)
-    if isinstance(value, text_type):
+    if not isinstance(value, bytes):
         value = value.encode("utf-8")
     return value + b"\x00"
 

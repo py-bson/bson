@@ -263,8 +263,7 @@ def encode_array(array, traversal_stack, traversal_parent = None, generator_func
 
 def decode_element(data, base):
     element_type = struct.unpack("<b", data[base:base + 1])[0]
-    element_description = ELEMENT_TYPES[element_type]
-    decode_func = globals()["decode_" + element_description + "_element"]
+    decode_func = _ELEMENT_TYPE_DECODERS[element_type]
     return decode_func(data, base)
 
 
@@ -382,3 +381,17 @@ def decode_object_id_element(data, base):
     base, name = decode_cstring(data, base + 1)
     value = b2a_hex(data[base:base + 12])
     return base + 12, name, value
+
+_ELEMENT_TYPE_DECODERS = {
+    0x01: decode_double_element,
+    0x02: decode_string_element,
+    0x03: decode_document_element,
+    0x04: decode_array_element,
+    0x05: decode_binary_element,
+    0x07: decode_object_id_element,
+    0x08: decode_boolean_element,
+    0x09: decode_UTCdatetime_element,
+    0x0A: decode_none_element,
+    0x10: decode_int32_element,
+    0x12: decode_int64_element
+}

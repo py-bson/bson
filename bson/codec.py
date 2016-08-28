@@ -134,21 +134,20 @@ def encode_cstring(value):
     return value + b"\x00"
 
 
-def decode_cstring(data, base):
-    length = 0
-    max_length = len(data) - base
-    while length < max_length:
-        character = data[base + length]
-        if PY3:
-            character = chr(character)
-        length += 1
-        if character == "\x00":
-            break
-    # unicode() is faster in Python 2.
-    if PY3:
-        return base + length, data[base:base + length - 1].decode("utf-8")
-    else:
-        return  base + length, unicode(data[base:base + length - 1])
+def _p2_decode_cstring(data, base):
+    ll = data.index("\x00", base) + 1
+    return  ll, unicode(data[base:ll - 1])
+
+def _p3_decode_cstring(data, base):
+    ll = data.index(0, base) + 1
+    return ll, data[base:ll - 1].decode("utf-8")
+
+
+if PY3:
+    decode_cstring = _p3_decode_cstring
+else:
+    decode_cstring = _p2_decode_cstring
+
 
 def encode_binary(value):
     length = len(value)

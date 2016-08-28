@@ -272,7 +272,7 @@ def decode_document(data, base, as_array=False):
             value = b2a_hex(data[base:base + 12])
             base =+ 12
         elif element_type == 0x08:
-            value = not not struct.unpack("<b", data[base:base + 1])[0]
+            value = struct.unpack("<b", data[base:base + 1])[0]
         elif element_type == 0x09:
             value = datetime.fromtimestamp(
                 struct.unpack("<q", data[base:base + 8])[0] / 1000.0, pytz.utc)

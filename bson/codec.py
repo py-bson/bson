@@ -134,21 +134,6 @@ def encode_cstring(value):
     return value + b"\x00"
 
 
-def _p2_decode_cstring(data, base, decode_name=True):
-    ll = data.index("\x00", base) + 1
-    return  ll, unicode(data[base:ll - 1]) if decode_name else None
-
-def _p3_decode_cstring(data, base, decode_name=True):
-    ll = data.index(0, base) + 1
-    return ll, data[base:ll - 1].decode("utf-8") if decode_name else None
-
-
-if PY3:
-    decode_cstring = _p3_decode_cstring
-else:
-    decode_cstring = _p2_decode_cstring
-
-
 def encode_binary(value):
     length = len(value)
     return struct.pack("<ib", length, 0) + value
@@ -263,7 +248,13 @@ def decode_document(data, base, as_array=False):
     while base < end_point - 1:
 
         element_type = struct.unpack("<b", data[base:base + 1])[0]
-        base, name = decode_cstring(data, base + 1, decode_name=decode_name)
+
+        if PY3:
+            ll = data.index(0, base + 1) + 1
+            base, name = ll, data[base + 1:ll - 1].decode("utf-8") if decode_name else None
+        else:
+            ll = data.index("\x00", base + 1) + 1
+            base, name =  ll, unicode(data[base + 1:ll - 1]) if decode_name else None
 
         if element_type == 0x01:
             base, value = decode_double(data, base)

@@ -144,8 +144,11 @@ def decode_cstring(data, base):
         length += 1
         if character == "\x00":
             break
-    return base + length, data[base:base + length - 1].decode("utf-8")
-
+    # unicode() is faster in Python 2.
+    if PY3:
+        return base + length, data[base:base + length - 1].decode("utf-8")
+    else:
+        return  base + length, unicode(data[base:base + length - 1])
 
 def encode_binary(value):
     length = len(value)

@@ -134,13 +134,13 @@ def encode_cstring(value):
     return value + b"\x00"
 
 
-def _p2_decode_cstring(data, base):
+def _p2_decode_cstring(data, base, decode_name=True):
     ll = data.index("\x00", base) + 1
-    return  ll, unicode(data[base:ll - 1])
+    return  ll, unicode(data[base:ll - 1]) if decode_name else None
 
-def _p3_decode_cstring(data, base):
+def _p3_decode_cstring(data, base, decode_name=True):
     ll = data.index(0, base) + 1
-    return ll, data[base:ll - 1].decode("utf-8")
+    return ll, data[base:ll - 1].decode("utf-8") if decode_name else None
 
 
 if PY3:
@@ -186,8 +186,8 @@ def encode_double_element(name, value):
     return b"\x01" + encode_cstring(name) + encode_double(value)
 
 
-def decode_double_element(data, base):
-    base, name = decode_cstring(data, base + 1)
+def decode_double_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
     base, value = decode_double(data, base)
     return base, name, value
 
@@ -196,8 +196,8 @@ def encode_string_element(name, value):
     return b"\x02" + encode_cstring(name) + encode_string(value)
 
 
-def decode_string_element(data, base):
-    base, name = decode_cstring(data, base + 1)
+def decode_string_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
     base, value = decode_string(data, base)
     return base, name, value
 
@@ -263,22 +263,25 @@ def encode_array(array, traversal_stack, traversal_parent = None, generator_func
     return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
 
 
-def decode_element(data, base):
+def decode_element(data, base, decode_name=True):
     element_type = struct.unpack("<b", data[base:base + 1])[0]
     decode_func = _ELEMENT_TYPE_DECODERS[element_type]
-    return decode_func(data, base)
+    return decode_func(data, base, decode_name=decode_name)
 
 
-def decode_document(data, base):
+def decode_document(data, base, as_array=False):
     length = struct.unpack("<i", data[base:base + 4])[0]
     end_point = base + length
     if data[end_point - 1] not in ('\0', 0):
         raise ValueError('missing null-terminator in document')
     base += 4
-    retval = {}
+    retval = [] if as_array else {}
     while base < end_point - 1:
-        base, name, value = decode_element(data, base)
-        retval[name] = value
+        base, name, value = decode_element(data, base, not as_array)
+        if as_array:
+            retval.append(value)
+        else:
+            retval[name] = value
     if "$$__CLASS_NAME__$$" in retval:
         retval = decode_object(retval)
     return end_point, retval
@@ -288,8 +291,8 @@ def encode_document_element(name, value, traversal_stack, generator_func, on_unk
     return b"\x03" + encode_cstring(name) + encode_document(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
 
 
-def decode_document_element(data, base):
-    base, name = decode_cstring(data, base + 1)
+def decode_document_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
     base, value = decode_document(data, base)
     return base, name, value
 
@@ -298,26 +301,18 @@ def encode_array_element(name, value, traversal_stack, generator_func, on_unknow
     return b"\x04" + encode_cstring(name) + encode_array(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
 
 
-def decode_array_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    base, value = decode_document(data, base)
-    retval = []
-    try:
-        i = 0
-        while True:
-            retval.append(value[text_type(i)])
-            i += 1
-    except KeyError:
-        pass
-    return base, name, retval
+def decode_array_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
+    base, value = decode_document(data, base, as_array=True)
+    return base, name, value
 
 
 def encode_binary_element(name, value):
     return b"\x05" + encode_cstring(name) + encode_binary(value)
 
 
-def decode_binary_element(data, base):
-    base, name = decode_cstring(data, base + 1)
+def decode_binary_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
     base, value = decode_binary(data, base)
     return base, name, value
 
@@ -326,8 +321,8 @@ def encode_boolean_element(name, value):
     return b"\x08" + encode_cstring(name) + struct.pack("<b", value)
 
 
-def decode_boolean_element(data, base):
-    base, name = decode_cstring(data, base + 1)
+def decode_boolean_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
     value = not not struct.unpack("<b", data[base:base + 1])[0]
     return base + 1, name, value
 
@@ -339,8 +334,8 @@ def encode_UTCdatetime_element(name, value):
     return b"\x09" + encode_cstring(name) + struct.pack("<q", value)
 
 
-def decode_UTCdatetime_element(data, base):
-    base, name = decode_cstring(data, base + 1)
+def decode_UTCdatetime_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
     value = datetime.fromtimestamp(struct.unpack("<q", data[base:base + 8])[0] / 1000.0, pytz.utc)
     return base + 8, name, value
 
@@ -349,8 +344,8 @@ def encode_none_element(name, value):
     return b"\x0a" + encode_cstring(name)
 
 
-def decode_none_element(data, base):
-    base, name = decode_cstring(data, base + 1)
+def decode_none_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
     return base, name, None
 
 
@@ -359,8 +354,8 @@ def encode_int32_element(name, value):
     return b"\x10" + encode_cstring(name) + value
 
 
-def decode_int32_element(data, base):
-    base, name = decode_cstring(data, base + 1)
+def decode_int32_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
     value = struct.unpack("<i", data[base:base + 4])[0]
     return base + 4, name, value
 
@@ -369,8 +364,8 @@ def encode_int64_element(name, value):
     return b"\x12" + encode_cstring(name) + struct.pack("<q", value)
 
 
-def decode_int64_element(data, base):
-    base, name = decode_cstring(data, base + 1)
+def decode_int64_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
     value = struct.unpack("<q", data[base:base + 8])[0]
     return base + 8, name, value
 
@@ -379,8 +374,8 @@ def encode_object_id_element(name, value):
     return b"\x07" + encode_cstring(name) + value
 
 
-def decode_object_id_element(data, base):
-    base, name = decode_cstring(data, base + 1)
+def decode_object_id_element(data, base, decode_name=True):
+    base, name = decode_cstring(data, base + 1, decode_name=decode_name)
     value = b2a_hex(data[base:base + 12])
     return base + 12, name, value
 

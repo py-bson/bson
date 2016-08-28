@@ -201,16 +201,18 @@ def decode_string_element(data, base):
 
 
 def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=None):
-    if isinstance(value, BSONCoding):
-        buf.write(encode_object_element(name, value, traversal_stack, generator_func, on_unknown))
+    if isinstance(value, integer_types):
+        if not PY3 and isinstance(value, long):
+            buf.write(encode_int64_element(name, value))
+        else:
+            if value < -0x80000000 or value > 0x7fffffff:
+                buf.write(encode_int64_element(name, value))
+            else:
+                buf.write(encode_int32_element(name, value))
     elif isinstance(value, float):
         buf.write(encode_double_element(name, value))
     elif isinstance(value, text_type):
         buf.write(encode_string_element(name, value))
-    elif isinstance(value, dict):
-        buf.write(encode_document_element(name, value, traversal_stack, generator_func, on_unknown))
-    elif isinstance(value, list) or isinstance(value, tuple):
-        buf.write(encode_array_element(name, value, traversal_stack, generator_func, on_unknown))
     elif isinstance(value, str) or isinstance(value, bytes):
         buf.write(encode_binary_element(name, value))
     elif isinstance(value, bool):
@@ -219,14 +221,12 @@ def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=N
         buf.write(encode_UTCdatetime_element(name, value))
     elif value is None:
         buf.write(encode_none_element(name, value))
-    elif isinstance(value, integer_types):
-        if not PY3 and isinstance(value, long):
-            buf.write(encode_int64_element(name, value))
-        else:
-            if value < -0x80000000 or value > 0x7fffffff:
-                buf.write(encode_int64_element(name, value))
-            else:
-                buf.write(encode_int32_element(name, value))
+    elif isinstance(value, dict):
+        buf.write(encode_document_element(name, value, traversal_stack, generator_func, on_unknown))
+    elif isinstance(value, list) or isinstance(value, tuple):
+        buf.write(encode_array_element(name, value, traversal_stack, generator_func, on_unknown))
+    elif isinstance(value, BSONCoding):
+        buf.write(encode_object_element(name, value, traversal_stack, generator_func, on_unknown))
     else:
         if on_unknown is not None:
             encode_value(name, on_unknown(value), buf, traversal_stack, generator_func, on_unknown)

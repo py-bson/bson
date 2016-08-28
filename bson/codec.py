@@ -141,10 +141,6 @@ def encode_double(value):
     return struct.pack("<d", value)
 
 
-def decode_double(data, base):
-    return base + 8, struct.unpack("<d", data[base: base + 8])[0]
-
-
 ELEMENT_TYPES = {
     0x01: "double",
     0x02: "string",
@@ -260,7 +256,8 @@ def decode_document(data, base, as_array=False):
             base, name =  ll, unicode(data[base + 1:ll - 1]) if decode_name else None
 
         if element_type == 0x01:
-            base, value = decode_double(data, base)
+            value = struct.unpack("<d", data[base: base + 8])[0]
+            base += 8
         elif element_type == 0x02:
             length = struct.unpack("<i", data[base:base + 4])[0]
             value = data[base + 4: base + 4 + length - 1]

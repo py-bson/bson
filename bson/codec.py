@@ -120,7 +120,10 @@ def encode_string(value):
 def decode_string(data, base):
     length = struct.unpack("<i", data[base:base + 4])[0]
     value = data[base + 4: base + 4 + length - 1]
-    value = value.decode("utf-8")
+    if PY3:
+        value = value.decode("utf-8")
+    else:
+        value = unicode(value)
     return base + 4 + length, value
 
 

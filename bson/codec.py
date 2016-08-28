@@ -174,6 +174,16 @@ def encode_double_element(name, value):
 def encode_string_element(name, value):
     return b"\x02" + encode_cstring(name) + encode_string(value)
 
+def _is_string(value):
+    if isinstance(value, text_type):
+        return True
+    elif isinstance(value, str) or isinstance(value, bytes):
+        try:
+            unicode(value, errors='strict')
+            return True
+        except:
+            pass
+    return False
 
 def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=None):
     if isinstance(value, integer_types):
@@ -186,7 +196,7 @@ def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=N
                 buf.write(encode_int32_element(name, value))
     elif isinstance(value, float):
         buf.write(encode_double_element(name, value))
-    elif isinstance(value, text_type):
+    elif _is_string(value):
         buf.write(encode_string_element(name, value))
     elif isinstance(value, str) or isinstance(value, bytes):
         buf.write(encode_binary_element(name, value))

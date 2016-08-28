@@ -230,6 +230,13 @@ def encode_array(array, traversal_stack, traversal_parent = None, generator_func
 
 
 def decode_document(data, base, as_array=False):
+    # Create all the struct formats we might use.
+    double_struct = struct.Struct("<d")
+    int_struct = struct.Struct("<i")
+    char_struct = struct.Struct("<b")
+    long_struct = struct.Struct("<q")
+    int_char_struct = struct.Struct("<ib")
+
     length = struct.unpack("<i", data[base:base + 4])[0]
     end_point = base + length
     if data[end_point - 1] not in ('\0', 0):
@@ -240,7 +247,7 @@ def decode_document(data, base, as_array=False):
 
     while base < end_point - 1:
 
-        element_type = struct.unpack("<b", data[base:base + 1])[0]
+        element_type = char_struct.unpack(data[base:base + 1])[0]
 
         if PY3:
             ll = data.index(0, base + 1) + 1
@@ -250,10 +257,10 @@ def decode_document(data, base, as_array=False):
             base, name =  ll, unicode(data[base + 1:ll - 1]) if decode_name else None
 
         if element_type == 0x01:
-            value = struct.unpack("<d", data[base: base + 8])[0]
+            value = double_struct.unpack(data[base: base + 8])[0]
             base += 8
         elif element_type == 0x02:
-            length = struct.unpack("<i", data[base:base + 4])[0]
+            length = int_struct.unpack(data[base:base + 4])[0]
             value = data[base + 4: base + 4 + length - 1]
             if PY3:
                 value = value.decode("utf-8")
@@ -265,25 +272,25 @@ def decode_document(data, base, as_array=False):
         elif element_type == 0x04:
             base, value = decode_document(data, base, as_array=True)
         elif element_type == 0x05:
-            length, binary_type = struct.unpack("<ib", data[base:base + 5])
+            length, binary_type = int_char_struct.unpack(data[base:base + 5])
             base += 5 + length
             value = data[base + 5:base + 5 + length]
         elif element_type == 0x07:
             value = b2a_hex(data[base:base + 12])
             base =+ 12
         elif element_type == 0x08:
-            value = struct.unpack("<b", data[base:base + 1])[0]
+            value = char_struct.unpack(data[base:base + 1])[0]
         elif element_type == 0x09:
             value = datetime.fromtimestamp(
-                struct.unpack("<q", data[base:base + 8])[0] / 1000.0, pytz.utc)
+                long_struct.unpack(data[base:base + 8])[0] / 1000.0, pytz.utc)
             base += 8
         elif element_type == 0x0A:
             value = None
         elif element_type == 0x10:
-            value = struct.unpack("<i", data[base:base + 4])[0]
+            value = int_struct.unpack(data[base:base + 4])[0]
             base += 4
         elif element_type == 0x12:
-            value = struct.unpack("<q", data[base:base + 8])[0]
+            value = int_char_struct.unpack(data[base:base + 8])[0]
             base += 8
 
         if as_array:

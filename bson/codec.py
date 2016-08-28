@@ -117,16 +117,6 @@ def encode_string(value):
     return struct.pack("<i%dsb" % (length,), length + 1, value, 0)
 
 
-def decode_string(data, base):
-    length = struct.unpack("<i", data[base:base + 4])[0]
-    value = data[base + 4: base + 4 + length - 1]
-    if PY3:
-        value = value.decode("utf-8")
-    else:
-        value = unicode(value)
-    return base + 4 + length, value
-
-
 def encode_cstring(value):
     if "\x00" in value:
         raise ValueError("Element names may not include NUL bytes.")
@@ -272,7 +262,13 @@ def decode_document(data, base, as_array=False):
         if element_type == 0x01:
             base, value = decode_double(data, base)
         elif element_type == 0x02:
-            base, value = decode_string(data, base)
+            length = struct.unpack("<i", data[base:base + 4])[0]
+            value = data[base + 4: base + 4 + length - 1]
+            if PY3:
+                value = value.decode("utf-8")
+            else:
+                value = unicode(value)
+            base += 4 + length
         elif element_type == 0x03:
             base, value = decode_document(data, base)
         elif element_type == 0x04:

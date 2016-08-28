@@ -256,10 +256,10 @@ def decode_document(data, base, as_array=False):
             ll = data.index("\x00", base + 1) + 1
             base, name =  ll, unicode(data[base + 1:ll - 1]) if decode_name else None
 
-        if element_type == 0x01:
+        if element_type == 0x01: #  double
             value = double_struct.unpack(data[base: base + 8])[0]
             base += 8
-        elif element_type == 0x02:
+        elif element_type == 0x02: #  string
             length = int_struct.unpack(data[base:base + 4])[0]
             value = data[base + 4: base + 4 + length - 1]
             if PY3:
@@ -267,29 +267,29 @@ def decode_document(data, base, as_array=False):
             else:
                 value = unicode(value)
             base += 4 + length
-        elif element_type == 0x03:
+        elif element_type == 0x03: #  document
             base, value = decode_document(data, base)
-        elif element_type == 0x04:
+        elif element_type == 0x04: #  array
             base, value = decode_document(data, base, as_array=True)
-        elif element_type == 0x05:
+        elif element_type == 0x05: #  binary
             length, binary_type = int_char_struct.unpack(data[base:base + 5])
             base += 5 + length
             value = data[base + 5:base + 5 + length]
-        elif element_type == 0x07:
+        elif element_type == 0x07: #  object_id
             value = b2a_hex(data[base:base + 12])
             base =+ 12
-        elif element_type == 0x08:
+        elif element_type == 0x08: #  boolean
             value = char_struct.unpack(data[base:base + 1])[0]
-        elif element_type == 0x09:
+        elif element_type == 0x09: #  UTCdatetime
             value = datetime.fromtimestamp(
                 long_struct.unpack(data[base:base + 8])[0] / 1000.0, pytz.utc)
             base += 8
-        elif element_type == 0x0A:
+        elif element_type == 0x0A: #  none
             value = None
-        elif element_type == 0x10:
+        elif element_type == 0x10: #  int32
             value = int_struct.unpack(data[base:base + 4])[0]
             base += 4
-        elif element_type == 0x12:
+        elif element_type == 0x12: #  int64
             value = int_char_struct.unpack(data[base:base + 8])[0]
             base += 8
 

@@ -254,7 +254,7 @@ def encode_array(array, traversal_stack, traversal_parent = None, generator_func
     for i in xrange(0, len(array)):
         value = array[i]
         traversal_stack.append(TraversalStep(traversal_parent or array, i))
-        encode_value(text_type(i), value, buf, traversal_stack, generator_func, on_unknown)
+        encode_value(str(i), value, buf, traversal_stack, generator_func, on_unknown)
         traversal_stack.pop()
     e_list = buf.getvalue()
     e_list_length = len(e_list)

@@ -117,54 +117,22 @@ def encode_string(value):
     return struct.pack("<i%dsb" % (length,), length + 1, value, 0)
 
 
-def decode_string(data, base):
-    length = struct.unpack("<i", data[base:base + 4])[0]
-    value = data[base + 4: base + 4 + length - 1]
-    value = value.decode("utf-8")
-    return base + 4 + length, value
-
-
 def encode_cstring(value):
     if "\x00" in value:
         raise ValueError("Element names may not include NUL bytes.")
         # A NUL byte is used to delimit our string, accepting one would cause
         # our string to terminate early.
-    if isinstance(value, integer_types):
-        value = str(value)
     if not isinstance(value, bytes):
         value = value.encode("utf-8")
     return value + b"\x00"
-
-
-def decode_cstring(data, base):
-    length = 0
-    max_length = len(data) - base
-    while length < max_length:
-        character = data[base + length]
-        if PY3:
-            character = chr(character)
-        length += 1
-        if character == "\x00":
-            break
-    return base + length, data[base:base + length - 1].decode("utf-8")
 
 
 def encode_binary(value):
     length = len(value)
     return struct.pack("<ib", length, 0) + value
 
-
-def decode_binary(data, base):
-    length, binary_type = struct.unpack("<ib", data[base:base + 5])
-    return base + 5 + length, data[base + 5:base + 5 + length]
-
-
 def encode_double(value):
     return struct.pack("<d", value)
-
-
-def decode_double(data, base):
-    return base + 8, struct.unpack("<d", data[base: base + 8])[0]
 
 
 ELEMENT_TYPES = {
@@ -186,33 +154,33 @@ def encode_double_element(name, value):
     return b"\x01" + encode_cstring(name) + encode_double(value)
 
 
-def decode_double_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    base, value = decode_double(data, base)
-    return base, name, value
-
-
 def encode_string_element(name, value):
     return b"\x02" + encode_cstring(name) + encode_string(value)
 
-
-def decode_string_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    base, value = decode_string(data, base)
-    return base, name, value
-
+def _is_string(value):
+    if isinstance(value, text_type):
+        return True
+    elif isinstance(value, str) or isinstance(value, bytes):
+        try:
+            unicode(value, errors='strict')
+            return True
+        except:
+            pass
+    return False
 
 def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=None):
-    if isinstance(value, BSONCoding):
-        buf.write(encode_object_element(name, value, traversal_stack, generator_func, on_unknown))
+    if isinstance(value, integer_types):
+        if not PY3 and isinstance(value, long):
+            buf.write(encode_int64_element(name, value))
+        else:
+            if value < -0x80000000 or value > 0x7fffffff:
+                buf.write(encode_int64_element(name, value))
+            else:
+                buf.write(encode_int32_element(name, value))
     elif isinstance(value, float):
         buf.write(encode_double_element(name, value))
-    elif isinstance(value, text_type):
+    elif _is_string(value):
         buf.write(encode_string_element(name, value))
-    elif isinstance(value, dict):
-        buf.write(encode_document_element(name, value, traversal_stack, generator_func, on_unknown))
-    elif isinstance(value, list) or isinstance(value, tuple):
-        buf.write(encode_array_element(name, value, traversal_stack, generator_func, on_unknown))
     elif isinstance(value, str) or isinstance(value, bytes):
         buf.write(encode_binary_element(name, value))
     elif isinstance(value, bool):
@@ -221,14 +189,12 @@ def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=N
         buf.write(encode_UTCdatetime_element(name, value))
     elif value is None:
         buf.write(encode_none_element(name, value))
-    elif isinstance(value, integer_types):
-        if not PY3 and isinstance(value, long):
-            buf.write(encode_int64_element(name, value))
-        else:
-            if value < -0x80000000 or value > 0x7fffffff:
-                buf.write(encode_int64_element(name, value))
-            else:
-                buf.write(encode_int32_element(name, value))
+    elif isinstance(value, dict):
+        buf.write(encode_document_element(name, value, traversal_stack, generator_func, on_unknown))
+    elif isinstance(value, list) or isinstance(value, tuple):
+        buf.write(encode_array_element(name, value, traversal_stack, generator_func, on_unknown))
+    elif isinstance(value, BSONCoding):
+        buf.write(encode_object_element(name, value, traversal_stack, generator_func, on_unknown))
     else:
         if on_unknown is not None:
             encode_value(name, on_unknown(value), buf, traversal_stack, generator_func, on_unknown)
@@ -256,30 +222,81 @@ def encode_array(array, traversal_stack, traversal_parent = None, generator_func
     for i in xrange(0, len(array)):
         value = array[i]
         traversal_stack.append(TraversalStep(traversal_parent or array, i))
-        encode_value(text_type(i), value, buf, traversal_stack, generator_func, on_unknown)
+        encode_value(str(i), value, buf, traversal_stack, generator_func, on_unknown)
         traversal_stack.pop()
     e_list = buf.getvalue()
     e_list_length = len(e_list)
     return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
 
 
-def decode_element(data, base):
-    element_type = struct.unpack("<b", data[base:base + 1])[0]
-    element_description = ELEMENT_TYPES[element_type]
-    decode_func = globals()["decode_" + element_description + "_element"]
-    return decode_func(data, base)
+def decode_document(data, base, as_array=False):
+    # Create all the struct formats we might use.
+    double_struct = struct.Struct("<d")
+    int_struct = struct.Struct("<i")
+    char_struct = struct.Struct("<b")
+    long_struct = struct.Struct("<q")
+    int_char_struct = struct.Struct("<ib")
 
-
-def decode_document(data, base):
     length = struct.unpack("<i", data[base:base + 4])[0]
     end_point = base + length
     if data[end_point - 1] not in ('\0', 0):
         raise ValueError('missing null-terminator in document')
     base += 4
-    retval = {}
+    retval = [] if as_array else {}
+    decode_name = not as_array
+
     while base < end_point - 1:
-        base, name, value = decode_element(data, base)
-        retval[name] = value
+
+        element_type = char_struct.unpack(data[base:base + 1])[0]
+
+        if PY3:
+            ll = data.index(0, base + 1) + 1
+            base, name = ll, data[base + 1:ll - 1].decode("utf-8") if decode_name else None
+        else:
+            ll = data.index("\x00", base + 1) + 1
+            base, name =  ll, unicode(data[base + 1:ll - 1]) if decode_name else None
+
+        if element_type == 0x01: #  double
+            value = double_struct.unpack(data[base: base + 8])[0]
+            base += 8
+        elif element_type == 0x02: #  string
+            length = int_struct.unpack(data[base:base + 4])[0]
+            value = data[base + 4: base + 4 + length - 1]
+            if PY3:
+                value = value.decode("utf-8")
+            else:
+                value = unicode(value)
+            base += 4 + length
+        elif element_type == 0x03: #  document
+            base, value = decode_document(data, base)
+        elif element_type == 0x04: #  array
+            base, value = decode_document(data, base, as_array=True)
+        elif element_type == 0x05: #  binary
+            length, binary_type = int_char_struct.unpack(data[base:base + 5])
+            base += 5 + length
+            value = data[base + 5:base + 5 + length]
+        elif element_type == 0x07: #  object_id
+            value = b2a_hex(data[base:base + 12])
+            base =+ 12
+        elif element_type == 0x08: #  boolean
+            value = char_struct.unpack(data[base:base + 1])[0]
+        elif element_type == 0x09: #  UTCdatetime
+            value = datetime.fromtimestamp(
+                long_struct.unpack(data[base:base + 8])[0] / 1000.0, pytz.utc)
+            base += 8
+        elif element_type == 0x0A: #  none
+            value = None
+        elif element_type == 0x10: #  int32
+            value = int_struct.unpack(data[base:base + 4])[0]
+            base += 4
+        elif element_type == 0x12: #  int64
+            value = int_char_struct.unpack(data[base:base + 8])[0]
+            base += 8
+
+        if as_array:
+            retval.append(value)
+        else:
+            retval[name] = value
     if "$$__CLASS_NAME__$$" in retval:
         retval = decode_object(retval)
     return end_point, retval
@@ -289,48 +306,16 @@ def encode_document_element(name, value, traversal_stack, generator_func, on_unk
     return b"\x03" + encode_cstring(name) + encode_document(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
 
 
-def decode_document_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    base, value = decode_document(data, base)
-    return base, name, value
-
-
 def encode_array_element(name, value, traversal_stack, generator_func, on_unknown):
     return b"\x04" + encode_cstring(name) + encode_array(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
-
-
-def decode_array_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    base, value = decode_document(data, base)
-    retval = []
-    try:
-        i = 0
-        while True:
-            retval.append(value[text_type(i)])
-            i += 1
-    except KeyError:
-        pass
-    return base, name, retval
 
 
 def encode_binary_element(name, value):
     return b"\x05" + encode_cstring(name) + encode_binary(value)
 
 
-def decode_binary_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    base, value = decode_binary(data, base)
-    return base, name, value
-
-
 def encode_boolean_element(name, value):
     return b"\x08" + encode_cstring(name) + struct.pack("<b", value)
-
-
-def decode_boolean_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    value = not not struct.unpack("<b", data[base:base + 1])[0]
-    return base + 1, name, value
 
 
 def encode_UTCdatetime_element(name, value):
@@ -340,19 +325,8 @@ def encode_UTCdatetime_element(name, value):
     return b"\x09" + encode_cstring(name) + struct.pack("<q", value)
 
 
-def decode_UTCdatetime_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    value = datetime.fromtimestamp(struct.unpack("<q", data[base:base + 8])[0] / 1000.0, pytz.utc)
-    return base + 8, name, value
-
-
 def encode_none_element(name, value):
     return b"\x0a" + encode_cstring(name)
-
-
-def decode_none_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    return base, name, None
 
 
 def encode_int32_element(name, value):
@@ -360,27 +334,9 @@ def encode_int32_element(name, value):
     return b"\x10" + encode_cstring(name) + value
 
 
-def decode_int32_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    value = struct.unpack("<i", data[base:base + 4])[0]
-    return base + 4, name, value
-
-
 def encode_int64_element(name, value):
     return b"\x12" + encode_cstring(name) + struct.pack("<q", value)
 
 
-def decode_int64_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    value = struct.unpack("<q", data[base:base + 8])[0]
-    return base + 8, name, value
-
-
 def encode_object_id_element(name, value):
     return b"\x07" + encode_cstring(name) + value
-
-
-def decode_object_id_element(data, base):
-    base, name = decode_cstring(data, base + 1)
-    value = b2a_hex(data[base:base + 12])
-    return base + 12, name, value

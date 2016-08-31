@@ -277,9 +277,10 @@ def decode_document(data, base, as_array=False):
             value = data[base + 5:base + 5 + length]
         elif element_type == 0x07: #  object_id
             value = b2a_hex(data[base:base + 12])
-            base =+ 12
+            base += 12
         elif element_type == 0x08: #  boolean
             value = char_struct.unpack(data[base:base + 1])[0]
+            base += 1
         elif element_type == 0x09: #  UTCdatetime
             value = datetime.fromtimestamp(
                 long_struct.unpack(data[base:base + 8])[0] / 1000.0, pytz.utc)

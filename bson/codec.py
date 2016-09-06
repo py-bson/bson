@@ -291,7 +291,7 @@ def decode_document(data, base, as_array=False):
             value = int_struct.unpack(data[base:base + 4])[0]
             base += 4
         elif element_type == 0x12: #  int64
-            value = int_char_struct.unpack(data[base:base + 8])[0]
+            value = long_struct.unpack(data[base:base + 8])[0]
             base += 8
 
         if as_array:

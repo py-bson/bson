@@ -118,7 +118,7 @@ def encode_string(value):
 
 
 def encode_cstring(value):
-    if isinstance(value, bytes):
+    if not isinstance(value, bytes):
             value = value.encode("utf-8")
     if "\x00" in value:
         raise ValueError("Element names may not include NUL bytes.")

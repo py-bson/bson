@@ -8,7 +8,7 @@ from setuptools import setup
 
 setup(
     name="bson",
-    version="0.4.3",
+    version="0.4.4",
     packages=["bson"],
     install_requires=["pytz>=2010b", "six>=1.9.0"],
     author="Ayun Park",

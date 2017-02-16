@@ -104,7 +104,6 @@ class _EmptyClass(object):
 def decode_object(raw_values):
     global classes
     class_name = raw_values["$$__CLASS_NAME__$$"]
-    cls = None
     try:
         cls = classes[class_name]
     except KeyError:

@@ -34,8 +34,10 @@ def dumps(obj, generator=None, on_unknown=None):
     the correct encoding order for keys.
     """
     if isinstance(obj, BSONCoding):
-        return encode_object(obj, [], generator_func=generator, on_unknown=on_unknown)
-    return encode_document(obj, [], generator_func=generator, on_unknown=on_unknown)
+        return encode_object(obj, [],
+                             generator_func=generator, on_unknown=on_unknown)
+    return encode_document(obj, [],
+                           generator_func=generator, on_unknown=on_unknown)
 
 
 def loads(data):

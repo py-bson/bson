@@ -36,7 +36,8 @@ def populate(parent, howmany, max_children):
             populate(baby, distribution[i], max_children)
             if isinstance(parent, dict):
                 key = os.urandom(8)
-                key = "".join(chr(c) for c in hexlify(key)) if PY3 else key.encode("hex")
+                key = "".join(chr(c) for c in hexlify(key)) \
+                    if PY3 else key.encode("hex")
                 parent[key] = baby
             else:
                 parent.append(baby)
@@ -47,13 +48,15 @@ def populate(parent, howmany, max_children):
 def populate_with_leaves(parent, howmany):
     for i in xrange(0, howmany):
         leaf = os.urandom(4)
-        leaf = "".join(chr(c) for c in hexlify(leaf)) if PY3 else leaf.encode("hex")
+        leaf = "".join(chr(c) for c in hexlify(leaf)) \
+            if PY3 else leaf.encode("hex")
         make_unicode = randint(0, 1)
         if make_unicode:
             leaf = text_type(leaf)
         if isinstance(parent, dict):
             key = os.urandom(4)
-            key = "".join(chr(c) for c in hexlify(key)) if PY3 else key.encode("hex")
+            key = "".join(chr(c) for c in hexlify(key)) \
+                if PY3 else key.encode("hex")
             parent[key] = leaf
         else:
             parent.append(leaf)

@@ -63,7 +63,7 @@ def patch_socket():
         sendobj(obj) - sends a BSON document to the socket atomically.
     """
     from socket import socket
-    from .network import _recvbytes, _recvobj, _sendobj
-    socket.recvbytes = _recvbytes
-    socket.recvobj = _recvobj
-    socket.sendobj = _sendobj
+    from .network import recvbytes, recvobj, sendobj
+    socket.recvbytes = recvbytes
+    socket.recvobj = recvobj
+    socket.sendobj = sendobj

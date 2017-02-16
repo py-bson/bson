@@ -10,7 +10,7 @@ def _bintoint(data):
     return unpack("<i", data)[0]
 
 
-def _sendobj(self, obj):
+def sendobj(self, obj):
     """
         Atomically send a BSON message.
     """
@@ -18,7 +18,7 @@ def _sendobj(self, obj):
     self.sendall(data)
 
 
-def _recvobj(self):
+def recvobj(self):
     """
         Atomic read of a BSON message.
 
@@ -39,7 +39,7 @@ def _recvobj(self):
     return retval
 
 
-def _recvbytes(self, bytes_needed, sock_buf = None):
+def recvbytes(self, bytes_needed, sock_buf = None):
     """
         Atomic read of bytes_needed bytes.
 

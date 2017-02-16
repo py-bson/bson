@@ -5,6 +5,7 @@ from unittest import TestCase
 import pytz
 from bson import dumps, loads
 
+
 class TestDateTime(TestCase):
     def test_datetime(self):
         now = datetime.now(pytz.utc)

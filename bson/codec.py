@@ -25,7 +25,8 @@ from six.moves import xrange
 
 class MissingClassDefinition(ValueError):
     def __init__(self, class_name):
-        super(MissingClassDefinition, self).__init__("No class definition for class %s" % (class_name,))
+        super(MissingClassDefinition,
+              self).__init__("No class definition for class %s" % (class_name,))
 
 
 class UnknownSerializerError(ValueError):
@@ -51,7 +52,7 @@ class BSONCoding(object):
 
     @abstractmethod
     def bson_encode(self):
-       pass
+        pass
 
     @abstractmethod
     def bson_init(self, raw_values):
@@ -71,7 +72,7 @@ def import_class(cls):
 
 def import_classes(*args):
     for cls in args:
-       import_class(cls)
+        import_class(cls)
 
 
 def import_classes_from_modules(*args):
@@ -85,11 +86,15 @@ def encode_object(obj, traversal_stack, generator_func, on_unknown=None):
     values = obj.bson_encode()
     class_name = obj.__class__.__name__
     values["$$__CLASS_NAME__$$"] = class_name
-    return encode_document(values, traversal_stack, obj, generator_func, on_unknown)
+    return encode_document(values, traversal_stack, obj,
+                           generator_func, on_unknown)
 
 
-def encode_object_element(name, value, traversal_stack, generator_func, on_unknown):
-    return b"\x03" + encode_cstring(name) + encode_object(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
+def encode_object_element(name, value, traversal_stack,
+                          generator_func, on_unknown):
+    return b"\x03" + encode_cstring(name) + \
+           encode_object(value, traversal_stack,
+                         generator_func=generator_func, on_unknown=on_unknown)
 
 
 class _EmptyClass(object):
@@ -157,6 +162,7 @@ def encode_double_element(name, value):
 def encode_string_element(name, value):
     return b"\x02" + encode_cstring(name) + encode_string(value)
 
+
 def _is_string(value):
     if isinstance(value, text_type):
         return True
@@ -168,7 +174,9 @@ def _is_string(value):
             pass
     return False
 
-def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=None):
+
+def encode_value(name, value, buf, traversal_stack,
+                 generator_func, on_unknown=None):
     if isinstance(value, integer_types):
         if not PY3 and isinstance(value, long):
             buf.write(encode_int64_element(name, value))
@@ -190,19 +198,24 @@ def encode_value(name, value, buf, traversal_stack, generator_func, on_unknown=N
     elif value is None:
         buf.write(encode_none_element(name, value))
     elif isinstance(value, dict):
-        buf.write(encode_document_element(name, value, traversal_stack, generator_func, on_unknown))
+        buf.write(encode_document_element(name, value, traversal_stack,
+                                          generator_func, on_unknown))
     elif isinstance(value, list) or isinstance(value, tuple):
-        buf.write(encode_array_element(name, value, traversal_stack, generator_func, on_unknown))
+        buf.write(encode_array_element(name, value, traversal_stack,
+                                       generator_func, on_unknown))
     elif isinstance(value, BSONCoding):
-        buf.write(encode_object_element(name, value, traversal_stack, generator_func, on_unknown))
+        buf.write(encode_object_element(name, value, traversal_stack,
+                                        generator_func, on_unknown))
     else:
         if on_unknown is not None:
-            encode_value(name, on_unknown(value), buf, traversal_stack, generator_func, on_unknown)
+            encode_value(name, on_unknown(value), buf, traversal_stack,
+                         generator_func, on_unknown)
         else:
             raise UnknownSerializerError()
 
 
-def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=None, on_unknown=None):
+def encode_document(obj, traversal_stack, traversal_parent=None,
+                    generator_func=None, on_unknown=None):
     buf = StringIO()
     key_iter = iterkeys(obj)
     if generator_func is not None:
@@ -210,23 +223,28 @@ def encode_document(obj, traversal_stack, traversal_parent=None, generator_func=
     for name in key_iter:
         value = obj[name]
         traversal_stack.append(TraversalStep(traversal_parent or obj, name))
-        encode_value(name, value, buf, traversal_stack, generator_func, on_unknown)
+        encode_value(name, value, buf, traversal_stack,
+                     generator_func, on_unknown)
         traversal_stack.pop()
     e_list = buf.getvalue()
     e_list_length = len(e_list)
-    return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
+    return struct.pack("<i%dsb" % (e_list_length,),
+                       e_list_length + 4 + 1, e_list, 0)
 
 
-def encode_array(array, traversal_stack, traversal_parent = None, generator_func = None, on_unknown = None):
+def encode_array(array, traversal_stack, traversal_parent=None,
+                 generator_func=None, on_unknown=None):
     buf = StringIO()
     for i in xrange(0, len(array)):
         value = array[i]
         traversal_stack.append(TraversalStep(traversal_parent or array, i))
-        encode_value(str(i), value, buf, traversal_stack, generator_func, on_unknown)
+        encode_value(str(i), value, buf, traversal_stack,
+                     generator_func, on_unknown)
         traversal_stack.pop()
     e_list = buf.getvalue()
     e_list_length = len(e_list)
-    return struct.pack("<i%dsb" % (e_list_length,), e_list_length + 4 + 1, e_list, 0)
+    return struct.pack("<i%dsb" % (e_list_length,),
+                       e_list_length + 4 + 1, e_list, 0)
 
 
 def decode_document(data, base, as_array=False):
@@ -251,15 +269,17 @@ def decode_document(data, base, as_array=False):
 
         if PY3:
             ll = data.index(0, base + 1) + 1
-            base, name = ll, data[base + 1:ll - 1].decode("utf-8") if decode_name else None
+            base, name = ll, data[base + 1:ll - 1].decode("utf-8") \
+                if decode_name else None
         else:
             ll = data.index("\x00", base + 1) + 1
-            base, name =  ll, unicode(data[base + 1:ll - 1]) if decode_name else None
+            base, name =  ll, unicode(data[base + 1:ll - 1])\
+                if decode_name else None
 
-        if element_type == 0x01: #  double
+        if element_type == 0x01:  # double
             value = double_struct.unpack(data[base: base + 8])[0]
             base += 8
-        elif element_type == 0x02: #  string
+        elif element_type == 0x02:  # string
             length = int_struct.unpack(data[base:base + 4])[0]
             value = data[base + 4: base + 4 + length - 1]
             if PY3:
@@ -267,30 +287,30 @@ def decode_document(data, base, as_array=False):
             else:
                 value = unicode(value)
             base += 4 + length
-        elif element_type == 0x03: #  document
+        elif element_type == 0x03:  # document
             base, value = decode_document(data, base)
-        elif element_type == 0x04: #  array
+        elif element_type == 0x04:  # array
             base, value = decode_document(data, base, as_array=True)
-        elif element_type == 0x05: #  binary
+        elif element_type == 0x05:  # binary
             length, binary_type = int_char_struct.unpack(data[base:base + 5])
             base += 5 + length
             value = data[base + 5:base + 5 + length]
-        elif element_type == 0x07: #  object_id
+        elif element_type == 0x07:  # object_id
             value = b2a_hex(data[base:base + 12])
             base += 12
-        elif element_type == 0x08: #  boolean
+        elif element_type == 0x08:  # boolean
             value = char_struct.unpack(data[base:base + 1])[0]
             base += 1
-        elif element_type == 0x09: #  UTCdatetime
+        elif element_type == 0x09:  # UTCdatetime
             value = datetime.fromtimestamp(
                 long_struct.unpack(data[base:base + 8])[0] / 1000.0, pytz.utc)
             base += 8
-        elif element_type == 0x0A: #  none
+        elif element_type == 0x0A:  # none
             value = None
-        elif element_type == 0x10: #  int32
+        elif element_type == 0x10:  # int32
             value = int_struct.unpack(data[base:base + 4])[0]
             base += 4
-        elif element_type == 0x12: #  int64
+        elif element_type == 0x12:  # int64
             value = long_struct.unpack(data[base:base + 8])[0]
             base += 8
 
@@ -303,12 +323,18 @@ def decode_document(data, base, as_array=False):
     return end_point, retval
 
 
-def encode_document_element(name, value, traversal_stack, generator_func, on_unknown):
-    return b"\x03" + encode_cstring(name) + encode_document(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
+def encode_document_element(name, value, traversal_stack,
+                            generator_func, on_unknown):
+    return b"\x03" + encode_cstring(name) + \
+           encode_document(value, traversal_stack,
+                           generator_func=generator_func, on_unknown=on_unknown)
 
 
-def encode_array_element(name, value, traversal_stack, generator_func, on_unknown):
-    return b"\x04" + encode_cstring(name) + encode_array(value, traversal_stack, generator_func=generator_func, on_unknown=on_unknown)
+def encode_array_element(name, value, traversal_stack,
+                         generator_func, on_unknown):
+    return b"\x04" + encode_cstring(name) + \
+           encode_array(value, traversal_stack,
+                        generator_func=generator_func, on_unknown=on_unknown)
 
 
 def encode_binary_element(name, value):
@@ -322,7 +348,8 @@ def encode_boolean_element(name, value):
 def encode_UTCdatetime_element(name, value):
     if value.tzinfo is None:
         warnings.warn(MissingTimezoneWarning(), None, 4)
-    value = int(round(calendar.timegm(value.utctimetuple()) * 1000 + (value.microsecond / 1000.0)))
+    value = int(round(calendar.timegm(value.utctimetuple()) * 1000 +
+                      (value.microsecond / 1000.0)))
     return b"\x09" + encode_cstring(name) + struct.pack("<q", value)
 
 

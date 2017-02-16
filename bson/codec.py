@@ -135,6 +135,7 @@ def encode_binary(value):
     length = len(value)
     return struct.pack("<ib", length, 0) + value
 
+
 def encode_double(value):
     return struct.pack("<d", value)
 
@@ -272,7 +273,7 @@ def decode_document(data, base, as_array=False):
                 if decode_name else None
         else:
             ll = data.index("\x00", base + 1) + 1
-            base, name =  ll, unicode(data[base + 1:ll - 1])\
+            base, name = ll, unicode(data[base + 1:ll - 1])\
                 if decode_name else None
 
         if element_type == 0x01:  # double
@@ -292,8 +293,8 @@ def decode_document(data, base, as_array=False):
             base, value = decode_document(data, base, as_array=True)
         elif element_type == 0x05:  # binary
             length, binary_type = int_char_struct.unpack(data[base:base + 5])
-            base += 5 + length
             value = data[base + 5:base + 5 + length]
+            base += 5 + length
         elif element_type == 0x07:  # object_id
             value = b2a_hex(data[base:base + 12])
             base += 12

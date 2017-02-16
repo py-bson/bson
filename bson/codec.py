@@ -194,7 +194,7 @@ def encode_value(name, value, buf, traversal_stack,
     elif isinstance(value, bool):
         buf.write(encode_boolean_element(name, value))
     elif isinstance(value, datetime):
-        buf.write(encode_UTCdatetime_element(name, value))
+        buf.write(encode_utc_datetime_element(name, value))
     elif value is None:
         buf.write(encode_none_element(name, value))
     elif isinstance(value, dict):
@@ -345,7 +345,7 @@ def encode_boolean_element(name, value):
     return b"\x08" + encode_cstring(name) + struct.pack("<b", value)
 
 
-def encode_UTCdatetime_element(name, value):
+def encode_utc_datetime_element(name, value):
     if value.tzinfo is None:
         warnings.warn(MissingTimezoneWarning(), None, 4)
     value = int(round(calendar.timegm(value.utctimetuple()) * 1000 +

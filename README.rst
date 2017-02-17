@@ -2,11 +2,12 @@ bson
 ====
 
 
-.. image:: https://badge.fury.io/py/bson.svg?
+.. image:: https://img.shields.io/pypi/v/bson.svg
    :target: https://pypi.python.org/pypi/bson
-.. image:: https://travis-ci.org/py-bson/bson.svg?branch=master
+.. image:: https://img.shields.io/travis/py-bson/bson.svg
    :target: https://travis-ci.org/py-bson/bson
 .. image:: https://img.shields.io/pypi/pyversions/bson.svg
+   :target: https://github.com/py-bson/bson
    
 
 Independent BSON codec for Python that doesn't depend on MongoDB.

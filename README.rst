@@ -6,6 +6,7 @@ bson
    :target: https://pypi.python.org/pypi/bson
 .. image:: https://travis-ci.org/py-bson/bson.svg?branch=master
    :target: https://travis-ci.org/py-bson/bson
+.. image:: https://img.shields.io/pypi/pyversions/bson.svg
    
 
 Independent BSON codec for Python that doesn't depend on MongoDB.

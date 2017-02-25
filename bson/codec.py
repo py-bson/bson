@@ -251,7 +251,7 @@ def encode_array(array, traversal_stack, traversal_parent=None,
 
 
 def decode_binary_subtype(value, binary_subtype):
-    if binary_subtype == 0x04: # UUID
+    if binary_subtype in [0x03, 0x04]: # legacy UUID, UUID
         return UUID(bytes=value)
     return value
 

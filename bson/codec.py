@@ -10,6 +10,7 @@ import struct
 import warnings
 from datetime import datetime
 from abc import ABCMeta, abstractmethod
+from uuid import UUID
 try:
     from io import BytesIO as StringIO
 except ImportError:
@@ -131,9 +132,9 @@ def encode_cstring(value):
     return value + b"\x00"
 
 
-def encode_binary(value):
+def encode_binary(value, binary_subtype=0):
     length = len(value)
-    return struct.pack("<ib", length, 0) + value
+    return struct.pack("<ib", length, binary_subtype) + value
 
 
 def encode_double(value):
@@ -191,6 +192,8 @@ def encode_value(name, value, buf, traversal_stack,
         buf.write(encode_string_element(name, value))
     elif isinstance(value, str) or isinstance(value, bytes):
         buf.write(encode_binary_element(name, value))
+    elif isinstance(value, UUID):
+        buf.write(encode_binary_element(name, value.bytes, binary_subtype=4))
     elif isinstance(value, bool):
         buf.write(encode_boolean_element(name, value))
     elif isinstance(value, datetime):
@@ -247,6 +250,12 @@ def encode_array(array, traversal_stack, traversal_parent=None,
                        e_list_length + 4 + 1, e_list, 0)
 
 
+def decode_binary_subtype(value, binary_subtype):
+    if binary_subtype in [0x03, 0x04]: # legacy UUID, UUID
+        return UUID(bytes=value)
+    return value
+
+
 def decode_document(data, base, as_array=False):
     # Create all the struct formats we might use.
     double_struct = struct.Struct("<d")
@@ -292,8 +301,9 @@ def decode_document(data, base, as_array=False):
         elif element_type == 0x04:  # array
             base, value = decode_document(data, base, as_array=True)
         elif element_type == 0x05:  # binary
-            length, binary_type = int_char_struct.unpack(data[base:base + 5])
+            length, binary_subtype = int_char_struct.unpack(data[base:base + 5])
             value = data[base + 5:base + 5 + length]
+            value = decode_binary_subtype(value, binary_subtype)
             base += 5 + length
         elif element_type == 0x07:  # object_id
             value = b2a_hex(data[base:base + 12])
@@ -337,8 +347,8 @@ def encode_array_element(name, value, traversal_stack,
                         generator_func=generator_func, on_unknown=on_unknown)
 
 
-def encode_binary_element(name, value):
-    return b"\x05" + encode_cstring(name) + encode_binary(value)
+def encode_binary_element(name, value, binary_subtype=0):
+    return b"\x05" + encode_cstring(name) + encode_binary(value, binary_subtype=binary_subtype)
 
 
 def encode_boolean_element(name, value):

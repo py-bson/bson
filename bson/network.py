@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from struct import unpack
 
-from six import StringIO
+from six import BytesIO, b
 
 from . import dumps, loads
 
@@ -49,11 +49,14 @@ def recvbytes(self, bytes_needed, sock_buf = None):
         If the return value is None, it means the socket is closed by the other side.
     """
     if sock_buf is None:
-        sock_buf = StringIO()
+        sock_buf = BytesIO()
     bytes_count = 0
     while bytes_count < bytes_needed:
         chunk = self.recv(min(bytes_needed - bytes_count, 32768))
         part_count = len(chunk)
+
+        if type(chunk) == str:
+            chunk = b(chunk)
 
         if part_count < 1:
             return None

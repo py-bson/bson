@@ -178,7 +178,7 @@ def _is_string(value):
 
 def encode_value(name, value, buf, traversal_stack,
                  generator_func, on_unknown=None):
-    if isinstance(value, integer_types):
+    if isinstance(value, integer_types) is not isinstance(value, bool):
         if not PY3 and isinstance(value, long):
             buf.write(encode_int64_element(name, value))
         else:
@@ -309,7 +309,7 @@ def decode_document(data, base, as_array=False):
             value = b2a_hex(data[base:base + 12])
             base += 12
         elif element_type == 0x08:  # boolean
-            value = char_struct.unpack(data[base:base + 1])[0]
+            value = bool(char_struct.unpack(data[base:base + 1])[0])
             base += 1
         elif element_type == 0x09:  # UTCdatetime
             value = datetime.fromtimestamp(

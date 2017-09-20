@@ -20,6 +20,7 @@ For binaries, only the default 0x0 type is supported.
 """
 
 from .codec import *
+from .objectid import ObjectId
 
 __all__ = ["loads", "dumps"]
 

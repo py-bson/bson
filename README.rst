@@ -10,8 +10,9 @@ bson
    :target: https://github.com/py-bson/bson
    
 
-Independent BSON codec for Python that doesn't depend on MongoDB.
-
+Independent BSON codec for Python that doesn't depend on MongoDB. The bson
+ObjectId implementation is forked from the PyMongo project, licensed under
+the Version 2.0 Apache License.
 
 Installation
 ------------

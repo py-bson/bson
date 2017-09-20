@@ -15,23 +15,34 @@
 """Tests for the objectid module."""
 
 import datetime
+import os
 import pickle
 import sys
+import struct
 
 sys.path[0:0] = [""]
 
-from bson.errors import InvalidId
 from bson.objectid import ObjectId
+from bson.objectid import InvalidId
 from bson.py3compat import PY3, _unicode
 from bson.tz_util import (FixedOffset,
                           utc)
-from test import SkipTest, unittest
-from test.utils import oid_generated_on_client
+
+if sys.version_info[:2] == (2, 6):
+    import unittest2 as unittest
+    from unittest2 import SkipTest
+else:
+    import unittest
+    from unittest import SkipTest
 
 
 def oid(x):
     return ObjectId()
 
+def oid_generated_on_client(oid):
+    """Is this process's PID in this ObjectId?"""
+    pid_from_doc = struct.unpack(">H", oid.binary[7:9])[0]
+    return (os.getpid() % 0xFFFF) == pid_from_doc
 
 class TestObjectId(unittest.TestCase):
     def test_creation(self):

@@ -27,7 +27,6 @@ import struct
 import threading
 import time
 
-from bson.errors import InvalidId
 from bson.py3compat import PY3, bytes_from_hex, string_type, text_type
 from bson.tz_util import utc
 
@@ -45,6 +44,10 @@ def _machine_bytes():
         machine_hash.update(socket.gethostname())
     return machine_hash.digest()[0:3]
 
+
+class InvalidId(ValueError):
+    """Raised when trying to create an ObjectId from invalid data.
+    """
 
 def _raise_invalid_id(oid):
     raise InvalidId(

@@ -178,7 +178,9 @@ def _is_string(value):
 
 def encode_value(name, value, buf, traversal_stack,
                  generator_func, on_unknown=None):
-    if isinstance(value, integer_types) is not isinstance(value, bool):
+    if isinstance(value, bool):
+        buf.write(encode_boolean_element(name, value))
+    elif isinstance(value, integer_types):
         if not PY3 and isinstance(value, long):
             buf.write(encode_int64_element(name, value))
         else:
@@ -194,8 +196,6 @@ def encode_value(name, value, buf, traversal_stack,
         buf.write(encode_binary_element(name, value))
     elif isinstance(value, UUID):
         buf.write(encode_binary_element(name, value.bytes, binary_subtype=4))
-    elif isinstance(value, bool):
-        buf.write(encode_boolean_element(name, value))
     elif isinstance(value, datetime):
         buf.write(encode_utc_datetime_element(name, value))
     elif value is None:

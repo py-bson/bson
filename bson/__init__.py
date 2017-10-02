@@ -8,7 +8,6 @@ Specifications taken from: http://bsonspec.org/#/specification
 The following types are unsupported, because for data exchange purposes, they're
 over-engineered:
     0x06 (Undefined)
-    0x07 (ObjectId)
     0x0b (Regex - Exactly which flavor do you want? Better let higher level
         programmers make that decision.)
     0x0c (DBPointer)
@@ -21,6 +20,7 @@ For binaries, only the default 0x0 type is supported.
 """
 
 from .codec import *
+from .objectid import ObjectId
 
 __all__ = ["loads", "dumps"]
 

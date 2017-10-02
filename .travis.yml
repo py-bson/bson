@@ -9,5 +9,6 @@ python:
 - 3.6
 install:
 - pip install pytz>=2010b six>=1.9.0
+- if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install unittest2; fi
 script:
 - python test.py

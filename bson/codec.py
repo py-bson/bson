@@ -188,6 +188,8 @@ def encode_value(name, value, buf, traversal_stack,
             if value < -0x80000000 or 0x7FFFFFFFFFFFFFFF >= value > 0x7fffffff:
                 buf.write(encode_int64_element(name, value))
             elif value > 0x7FFFFFFFFFFFFFFF:
+                if value > 0xFFFFFFFFFFFFFFFF:
+                    raise Exception("BSON format supports only int value < %s" % 0xFFFFFFFFFFFFFFFF) 
                 buf.write(encode_uint64_element(name, value))
             else:
                 buf.write(encode_int32_element(name, value))
@@ -325,8 +327,8 @@ def decode_document(data, base, as_array=False):
         elif element_type == 0x10:  # int32
             value = int_struct.unpack(data[base:base + 4])[0]
             base += 4
-        elif element_type == 0x11:  # int32
-            value = uint64_struct.unpack(data[base:base + 4])[0]
+        elif element_type == 0x11:  # uint64
+            value = uint64_struct.unpack(data[base:base + 8])[0]
             base += 8
         elif element_type == 0x12:  # int64
             value = long_struct.unpack(data[base:base + 8])[0]

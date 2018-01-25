@@ -6,20 +6,20 @@ from bson import dumps, loads
 
 class TestInt(TestCase):
     def setUp(self):
-        self.goodRquestDict = {
+        self.good_rquest_dict = {
             "uint64": 0xFFFFFFFFFFFFFFFF - 1,
             "int64:": 0x7FFFFFFFFFFFFFFF - 1,
             "int32": 0x7fffffff
         }
-        self.badRequestDict = {
+        self.bad_request_dict = {
             "uint64": 0xFFFFFFFFFFFFFFFF << 1
         }
 
     def test_int(self):
-        dump = dumps(self.goodRquestDict)
+        dump = dumps(self.good_rquest_dict)
         decoded = loads(dump)
-        self.assertEqual(decoded, self.goodRquestDict)
+        self.assertEqual(decoded, self.good_rquest_dict)
 
         with self.assertRaises(Exception):
-            dump = dumps(self.badRequestDict)
+            dump = dumps(self.bad_request_dict)
             decoded = loads(dump)

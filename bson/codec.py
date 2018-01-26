@@ -124,7 +124,7 @@ def encode_string(value):
 
 def encode_cstring(value):
     if not isinstance(value, bytes):
-            value = value.encode("utf-8")
+        value = value.encode("utf-8")
     if b"\x00" in value:
         raise ValueError("Element names may not include NUL bytes.")
         # A NUL byte is used to delimit our string, accepting one would cause
@@ -152,6 +152,7 @@ ELEMENT_TYPES = {
     0x09: "UTCdatetime",
     0x0A: "none",
     0x10: "int32",
+    0x11: "uint64",
     0x12: "int64"
 }
 
@@ -184,8 +185,12 @@ def encode_value(name, value, buf, traversal_stack,
         if not PY3 and isinstance(value, long):
             buf.write(encode_int64_element(name, value))
         else:
-            if value < -0x80000000 or value > 0x7fffffff:
+            if value < -0x80000000 or 0x7FFFFFFFFFFFFFFF >= value > 0x7fffffff:
                 buf.write(encode_int64_element(name, value))
+            elif value > 0x7FFFFFFFFFFFFFFF:
+                if value > 0xFFFFFFFFFFFFFFFF:
+                    raise Exception("BSON format supports only int value < %s" % 0xFFFFFFFFFFFFFFFF) 
+                buf.write(encode_uint64_element(name, value))
             else:
                 buf.write(encode_int32_element(name, value))
     elif isinstance(value, float):
@@ -251,7 +256,7 @@ def encode_array(array, traversal_stack, traversal_parent=None,
 
 
 def decode_binary_subtype(value, binary_subtype):
-    if binary_subtype in [0x03, 0x04]: # legacy UUID, UUID
+    if binary_subtype in [0x03, 0x04]:  # legacy UUID, UUID
         return UUID(bytes=value)
     return value
 
@@ -262,6 +267,7 @@ def decode_document(data, base, as_array=False):
     int_struct = struct.Struct("<i")
     char_struct = struct.Struct("<b")
     long_struct = struct.Struct("<q")
+    uint64_struct = struct.Struct("<Q")
     int_char_struct = struct.Struct("<ib")
 
     length = struct.unpack("<i", data[base:base + 4])[0]
@@ -301,7 +307,8 @@ def decode_document(data, base, as_array=False):
         elif element_type == 0x04:  # array
             base, value = decode_document(data, base, as_array=True)
         elif element_type == 0x05:  # binary
-            length, binary_subtype = int_char_struct.unpack(data[base:base + 5])
+            length, binary_subtype = int_char_struct.unpack(
+                data[base:base + 5])
             value = data[base + 5:base + 5 + length]
             value = decode_binary_subtype(value, binary_subtype)
             base += 5 + length
@@ -320,6 +327,9 @@ def decode_document(data, base, as_array=False):
         elif element_type == 0x10:  # int32
             value = int_struct.unpack(data[base:base + 4])[0]
             base += 4
+        elif element_type == 0x11:  # uint64
+            value = uint64_struct.unpack(data[base:base + 8])[0]
+            base += 8
         elif element_type == 0x12:  # int64
             value = long_struct.unpack(data[base:base + 8])[0]
             base += 8
@@ -370,6 +380,10 @@ def encode_none_element(name, value):
 def encode_int32_element(name, value):
     value = struct.pack("<i", value)
     return b"\x10" + encode_cstring(name) + value
+
+
+def encode_uint64_element(name, value):
+    return b"\x11" + encode_cstring(name) + struct.pack("<Q", value)
 
 
 def encode_int64_element(name, value):

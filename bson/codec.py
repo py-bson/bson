@@ -11,6 +11,7 @@ import warnings
 from datetime import datetime
 from abc import ABCMeta, abstractmethod
 from uuid import UUID
+from decimal import Decimal
 try:
     from io import BytesIO as StringIO
 except ImportError:
@@ -214,6 +215,8 @@ def encode_value(name, value, buf, traversal_stack,
     elif isinstance(value, BSONCoding):
         buf.write(encode_object_element(name, value, traversal_stack,
                                         generator_func, on_unknown))
+    elif isinstance(value, Decimal):
+        buf.write(encode_double_element(name, float(value)))
     else:
         if on_unknown is not None:
             encode_value(name, on_unknown(value), buf, traversal_stack,

@@ -19,6 +19,7 @@ except ImportError:
 
 import calendar
 import pytz
+from CodeConvert import CodeConvert as cc
 from binascii import b2a_hex
 
 from six import integer_types, iterkeys, text_type, PY3
@@ -303,7 +304,7 @@ def decode_document(data, base, as_array=False):
             if PY3:
                 value = value.decode("utf-8")
             else:
-                value = unicode(value)
+                value = cc.Convert2Unicode(value)
             base += 4 + length
         elif element_type == 0x03:  # document
             base, value = decode_document(data, base)

@@ -29,7 +29,7 @@ setup(
     name="bson",
     version="0.5.2",
     packages=["bson"],
-    install_requires=["pytz>=2010b", "six>=1.9.0"],
+    install_requires=["CodeConvert>=2.0.4", "pytz>=2010b", "six>=1.9.0"],
     author="Ayun Park",
     author_email="iamparkayun@gmail.com",
     description="BSON codec for Python",

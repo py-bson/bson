@@ -8,7 +8,7 @@ class TestInt(TestCase):
     def setUp(self):
         self.good_request_dict = {
             "uint64": 0xFFFFFFFFFFFFFFFF - 1,
-            "int64:": 0x7FFFFFFFFFFFFFFF - 1,
+            "int64": 0x7FFFFFFFFFFFFFFF - 1,
             "int32": 0x7fffffff
         }
         self.bad_request_dict = {

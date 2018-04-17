@@ -125,7 +125,7 @@ def encode_string(value):
 
 def encode_cstring(value):
     if not isinstance(value, bytes):
-        value = value.encode("utf-8")
+        value = str(value).encode("utf-8")
     if b"\x00" in value:
         raise ValueError("Element names may not include NUL bytes.")
         # A NUL byte is used to delimit our string, accepting one would cause

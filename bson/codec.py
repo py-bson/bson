@@ -125,7 +125,7 @@ def encode_string(value):
 
 def encode_cstring(value):
     if not isinstance(value, bytes):
-        value = value.encode("utf-8")
+        value = str(value).encode("utf-8")
     if b"\x00" in value:
         raise ValueError("Element names may not include NUL bytes.")
         # A NUL byte is used to delimit our string, accepting one would cause
@@ -183,17 +183,14 @@ def encode_value(name, value, buf, traversal_stack,
     if isinstance(value, bool):
         buf.write(encode_boolean_element(name, value))
     elif isinstance(value, integer_types):
-        if not PY3 and isinstance(value, long):
+        if value < -0x80000000 or 0x7FFFFFFFFFFFFFFF >= value > 0x7fffffff:
             buf.write(encode_int64_element(name, value))
+        elif value > 0x7FFFFFFFFFFFFFFF:
+            if value > 0xFFFFFFFFFFFFFFFF:
+                raise Exception("BSON format supports only int value < %s" % 0xFFFFFFFFFFFFFFFF) 
+            buf.write(encode_uint64_element(name, value))
         else:
-            if value < -0x80000000 or 0x7FFFFFFFFFFFFFFF >= value > 0x7fffffff:
-                buf.write(encode_int64_element(name, value))
-            elif value > 0x7FFFFFFFFFFFFFFF:
-                if value > 0xFFFFFFFFFFFFFFFF:
-                    raise Exception("BSON format supports only int value < %s" % 0xFFFFFFFFFFFFFFFF) 
-                buf.write(encode_uint64_element(name, value))
-            else:
-                buf.write(encode_int32_element(name, value))
+            buf.write(encode_int32_element(name, value))
     elif isinstance(value, float):
         buf.write(encode_double_element(name, value))
     elif _is_string(value):

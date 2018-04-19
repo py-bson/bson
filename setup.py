@@ -31,7 +31,7 @@ class NewInstall(install):
 
 setup(
     name="bson",
-    version="0.5.2",
+    version="0.5.3",
     packages=["bson"],
     install_requires=["pytz>=2010b", "six>=1.9.0"],
     author="Ayun Park",

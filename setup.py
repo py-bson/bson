@@ -5,7 +5,11 @@
 # For licensing, see LICENSE file included in the package.
 import sys
 
-from pip import get_installed_distributions
+try:
+    from pip._internal import get_installed_distributions
+except ImportError:
+    from pip import get_installed_distributions
+
 from setuptools import setup
 from setuptools.command.install import install
 

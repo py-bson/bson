@@ -5,11 +5,6 @@
 # For licensing, see LICENSE file included in the package.
 import sys
 
-try:
-    from pip._internal import get_installed_distributions
-except ImportError:
-    from pip import get_installed_distributions
-
 from setuptools import setup
 from setuptools.command.install import install
 
@@ -18,6 +13,10 @@ class NewInstall(install):
 
     @staticmethod
     def check_pymongo():
+        try:
+            from pip._internal import get_installed_distributions
+        except ImportError:
+            from pip import get_installed_distributions
         for package in get_installed_distributions():
             if package.project_name == 'pymongo':
                 return True
@@ -31,9 +30,9 @@ class NewInstall(install):
 
 setup(
     name="bson",
-    version="0.5.3",
+    version="0.5.4",
     packages=["bson"],
-    install_requires=["pytz>=2010b", "six>=1.9.0"],
+    install_requires=["pytz>=2010b", "six>=1.9.0", "pip>=1.0"],
     author="Ayun Park",
     author_email="iamparkayun@gmail.com",
     description="BSON codec for Python",

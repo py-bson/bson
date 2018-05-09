@@ -18,12 +18,14 @@ except ImportError:
     from cStringIO import StringIO
 
 import calendar
-import pytz
+from dateutil.tz import tzutc
 from binascii import b2a_hex
 
 from six import integer_types, iterkeys, text_type, PY3
 from six.moves import xrange
 
+
+utc = tzutc()
 
 class MissingClassDefinition(ValueError):
     def __init__(self, class_name):
@@ -320,7 +322,7 @@ def decode_document(data, base, as_array=False):
             base += 1
         elif element_type == 0x09:  # UTCdatetime
             value = datetime.fromtimestamp(
-                long_struct.unpack(data[base:base + 8])[0] / 1000.0, pytz.utc)
+                long_struct.unpack(data[base:base + 8])[0] / 1000.0, utc)
             base += 8
         elif element_type == 0x0A:  # none
             value = None

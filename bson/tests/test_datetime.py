@@ -2,13 +2,13 @@
 from datetime import datetime
 from unittest import TestCase
 
-import pytz
+from dateutil.tz import tzutc
 from bson import dumps, loads
 
 
 class TestDateTime(TestCase):
     def test_datetime(self):
-        now = datetime.now(pytz.utc)
+        now = datetime.now(tzutc())
         obj = {"now": now}
         serialized = dumps(obj)
         obj2 = loads(serialized)

@@ -1,4 +1,5 @@
 # Copyright 2009-2015 MongoDB, Inc.
+# Modifications copyright (C) 2018 Gabriel Leopoldino
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,7 +36,7 @@ else:
     import unittest
     from unittest import SkipTest
 
-
+# fnv_1a_24 tests taken from MongoDB Python Driver at https://github.com/mongodb/mongo-python-driver/commit/61850357a0e0eeec1a30e1adc0bbf7ebee807358
 # Landon Curt Noll's test suite for FNV-1a32
 # http://isthe.com/chongo/src/fnv/test_fnv.c
 TEST = lambda x: x

@@ -1,4 +1,5 @@
 # Copyright 2009-2015 MongoDB, Inc.
+# Modifications copyright (C) 2018 Gabriel Leopoldino
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,6 +30,8 @@ import time
 from bson.py3compat import PY3, bytes_from_hex, string_type, text_type
 from bson.tz_util import utc
 
+
+# fnv_1a_24 adaptation taken from MongoDB Python Driver at https://github.com/mongodb/mongo-python-driver/commit/61850357a0e0eeec1a30e1adc0bbf7ebee807358
 if PY3:
     _ord = lambda x: x
 else:

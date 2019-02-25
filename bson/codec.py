@@ -286,20 +286,12 @@ def decode_document(data, base, as_array=False):
 
         if PY3:
             ll = data.index(0, base + 1) + 1
-            try:
-                base, name = ll, data[base + 1:ll - 1].decode("utf-8") \
-                    if decode_name else None
-            except UnicodeDecodeError:
-                base, name = ll, data[base + 1:ll - 1] \
-                    if decode_name else None
+            base, name = ll, data[base + 1:ll - 1].decode("utf-8") \
+                if decode_name else None
         else:
             ll = data.index("\x00", base + 1) + 1
-            try:
-                base, name = ll, unicode(data[base + 1:ll - 1])\
-                    if decode_name else None
-            except UnicodeDecodeError:
-                base, name = ll, data[base + 1:ll - 1]\
-                    if decode_name else None
+            base, name = ll, unicode(data[base + 1:ll - 1])\
+                if decode_name else None
 
         if element_type == 0x01:  # double
             value = double_struct.unpack(data[base: base + 8])[0]

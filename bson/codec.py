@@ -127,7 +127,7 @@ def encode_string(value):
 
 def encode_cstring(value):
     if not isinstance(value, bytes):
-        value = str(value).encode("utf-8")
+        value = text_type(value).encode("utf-8")
     if b"\x00" in value:
         raise ValueError("Element names may not include NUL bytes.")
         # A NUL byte is used to delimit our string, accepting one would cause
@@ -286,20 +286,17 @@ def decode_document(data, base, as_array=False):
 
         if PY3:
             ll = data.index(0, base + 1) + 1
-            try:
-                base, name = ll, data[base + 1:ll - 1].decode("utf-8") \
-                    if decode_name else None
-            except UnicodeDecodeError:
-                base, name = ll, data[base + 1:ll - 1] \
-                    if decode_name else None
         else:
             ll = data.index("\x00", base + 1) + 1
+        if decode_name:
+            name = data[base + 1:ll - 1]
             try:
-                base, name = ll, unicode(data[base + 1:ll - 1])\
-                    if decode_name else None
+                name = name.decode("utf-8")
             except UnicodeDecodeError:
-                base, name = ll, data[base + 1:ll - 1]\
-                    if decode_name else None
+                pass
+        else:
+            name = None
+        base = ll
 
         if element_type == 0x01:  # double
             value = double_struct.unpack(data[base: base + 8])[0]
@@ -307,10 +304,7 @@ def decode_document(data, base, as_array=False):
         elif element_type == 0x02:  # string
             length = int_struct.unpack(data[base:base + 4])[0]
             value = data[base + 4: base + 4 + length - 1]
-            if PY3:
-                value = value.decode("utf-8")
-            else:
-                value = unicode(value)
+            value = value.decode("utf-8")
             base += 4 + length
         elif element_type == 0x03:  # document
             base, value = decode_document(data, base)

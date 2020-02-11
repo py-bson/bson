@@ -52,3 +52,7 @@ class TestBinary(TestCase):
         dump = dumps(self.doc)
         decoded = loads(dump)
         self.assertEqual(decoded, self.doc)
+
+    def test_utf8_binary(self):
+        self.doc[u"\N{SNOWMAN}"] = u"\N{SNOWMAN WITHOUT SNOW}"
+        self.test_binary()

@@ -24,9 +24,9 @@ class NewInstall(install):
 
 
 setup(
-    name="bson",
+    name="pybson",
     version="0.5.9",
-    packages=["bson"],
+    packages=["pybson"],
     install_requires=["python-dateutil>=2.4.0", "six>=1.9.0"],
     author="Ayun Park",
     author_email="iamparkayun@gmail.com",

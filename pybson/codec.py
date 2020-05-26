@@ -34,7 +34,9 @@ class MissingClassDefinition(ValueError):
 
 
 class UnknownSerializerError(ValueError):
-    pass
+    def __init__(self, key, value):
+        super(UnknownSerializerError,
+              self).__init__("Unable to serialize: key '%s' value: %s type: %s" % (key,value, type(value)))
 
 
 class MissingTimezoneWarning(RuntimeWarning):
@@ -221,7 +223,7 @@ def encode_value(name, value, buf, traversal_stack,
             encode_value(name, on_unknown(value), buf, traversal_stack,
                          generator_func, on_unknown)
         else:
-            raise UnknownSerializerError()
+            raise UnknownSerializerError(name, value)
 
 
 def encode_document(obj, traversal_stack, traversal_parent=None,

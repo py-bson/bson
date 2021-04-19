@@ -1,6 +1,6 @@
 class Int32:
     """
-    An signed integer with a 32-bit fixed width.
+    A signed integer with a 32-bit fixed width.
     """
 
     def __init__(self, value):
@@ -17,7 +17,7 @@ class Int32:
 
 class Int64:
     """
-    An signed integer with a 64-bit fixed width.
+    A signed integer with a 64-bit fixed width.
     """
 
     def __init__(self, value):

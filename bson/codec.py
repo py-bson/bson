@@ -12,6 +12,9 @@ from datetime import datetime
 from abc import ABCMeta, abstractmethod
 from uuid import UUID
 from decimal import Decimal
+
+from bson.types import UInt64, Int64, Int32
+
 try:
     from io import BytesIO as StringIO
 except ImportError:
@@ -195,6 +198,12 @@ def encode_value(name, value, buf, traversal_stack,
             buf.write(encode_uint64_element(name, value))
         else:
             buf.write(encode_int32_element(name, value))
+    elif isinstance(value, Int32):
+        buf.write(encode_int32_element(name, value.get_value()))
+    elif isinstance(value, Int64):
+        buf.write(encode_int64_element(name, value.get_value()))
+    elif isinstance(value, UInt64):
+        buf.write(encode_uint64_element(name, value.get_value()))
     elif isinstance(value, float):
         buf.write(encode_double_element(name, value))
     elif _is_string(value):

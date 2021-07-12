@@ -118,7 +118,7 @@ def decode_object(raw_values):
     retval = _EmptyClass()
     retval.__class__ = cls
     alt_retval = retval.bson_init(raw_values)
-    return alt_retval or retval
+    return retval if alt_retval is None else alt_retval
 
 
 def encode_string(value):

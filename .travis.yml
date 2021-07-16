@@ -7,6 +7,8 @@ python:
 - 3.6
 - 3.7
 - 3.8
+- 3.9
+- 3.10-dev
 install:
 - pip install python-dateutil>=2.4.0 six>=1.9.0
 - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install unittest2; fi

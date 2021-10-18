@@ -67,4 +67,4 @@ class TestRandomTree(TestCase):
             populate(p, 256, 4)
             sp = dumps(p)
             p2 = loads(sp)
-            self.assertEquals(p, p2)
+            self.assertEqual(p, p2)

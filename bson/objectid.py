@@ -158,7 +158,7 @@ class ObjectId(object):
             generation_time = generation_time - generation_time.utcoffset()
         timestamp = calendar.timegm(generation_time.timetuple())
         oid = struct.pack(
-            ">i", int(timestamp)) + b"\x00\x00\x00\x00\x00\x00\x00\x00"
+            ">L", int(timestamp) & 0xFFFFFFFF) + b"\x00\x00\x00\x00\x00\x00\x00\x00"
         return cls(oid)
 
     @classmethod
@@ -184,7 +184,7 @@ class ObjectId(object):
         """
 
         # 4 bytes current time
-        oid = struct.pack(">i", int(time.time()))
+        oid = struct.pack(">L", int(time.time()) & 0xFFFFFFFF)
 
         # 3 bytes machine
         oid += ObjectId._machine_bytes

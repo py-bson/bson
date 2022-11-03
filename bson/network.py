@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from struct import unpack
 
-from six import BytesIO, b
+from io import BytesIO
 
 from . import dumps, loads
 
@@ -56,7 +56,7 @@ def recvbytes(self, bytes_needed, sock_buf = None):
         part_count = len(chunk)
 
         if type(chunk) == str:
-            chunk = b(chunk)
+            chunk = chunk.encode('latin-1')
 
         if part_count < 1:
             return None

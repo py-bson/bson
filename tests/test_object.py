@@ -4,7 +4,7 @@ from unittest import TestCase
 from bson import BSONCoding, dumps, loads, import_class
 
 
-class TestData(BSONCoding):
+class _TestData(BSONCoding):
     def __init__(self, *args):
         self.args = list(args)
         self.nested = None
@@ -17,7 +17,7 @@ class TestData(BSONCoding):
         self.nested = raw_values["nested"]
 
     def __eq__(self, other):
-        if not isinstance(other, TestData):
+        if not isinstance(other, _TestData):
             return NotImplemented
         if self.args != other.args:
             return False
@@ -31,12 +31,12 @@ class TestData(BSONCoding):
 
 class TestObjectCoding(TestCase):
     def test_codec(self):
-        import_class(TestData)
-        data = TestData(u"Lorem ipsum dolor sit amet",
+        import_class(_TestData)
+        data = _TestData(u"Lorem ipsum dolor sit amet",
                         "consectetur adipisicing elit",
                         42)
 
-        data2 = TestData(u"She's got both hands in her pockets",
+        data2 = _TestData(u"She's got both hands in her pockets",
                          "and she won't look at you won't look at you eh",
                          66,
                          23.54,

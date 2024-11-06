@@ -1,0 +1,44 @@
+[project]
+name = "bson"
+version = "0.5.10"
+description = "BSON codec for Python"
+authors = [
+    {name = "Ayun Park", email = "iamparkayun@gmail.com"},
+]
+dependencies = ["python-dateutil>=2.4.0"]
+requires-python = ">=3.9"
+readme = "README.md"
+license = {text = "BSD"}
+classifiers=[
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[dependency-groups]
+test = ["pytest>=8.3.3"]
+lint = ["mypy>=1.13.0", "ruff>=0.7.2", "types-six>=1.16.21.20241105", "types-python-dateutil>=2.9.0.20241003"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = [
+    "--maxfail=1",
+    "--strict-config",
+    "--strict-markers",
+]
+xfail_strict = true
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 80
+respect-gitignore = true
+target-version = "py39"
+
+[tool.pdm]
+distribution = true
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"

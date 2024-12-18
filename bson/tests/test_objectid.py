@@ -510,7 +510,7 @@ class TestObjectId(unittest.TestCase):
         self.assertTrue(oid_generated_on_client(ObjectId()))
 
     def test_generation_time(self):
-        d1 = datetime.datetime.now(datetime.UTC)
+        d1 = datetime.datetime.now(utc)
         d2 = ObjectId().generation_time
 
         self.assertEqual(utc, d2.tzinfo)
@@ -521,7 +521,7 @@ class TestObjectId(unittest.TestCase):
             # See https://bugs.pypy.org/issue1092
             raise SkipTest("datetime.timedelta is broken in pypy 1.8.0")
         # note: could use tz aware datetimes here?
-        d = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        d = datetime.datetime.now(utc).replace(tzinfo=None)
 
         d = d - datetime.timedelta(microseconds=d.microsecond)
         oid = ObjectId.from_datetime(d)

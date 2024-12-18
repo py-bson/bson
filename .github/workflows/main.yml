@@ -27,7 +27,7 @@ jobs:
         run: uv pip sync requirements.txt --python venv
 
       - name: Run tests
-        run: uv run test.py
+        run: uv run test.py --python venv
 
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check:

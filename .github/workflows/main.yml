@@ -20,14 +20,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Create virtual environment
-        run: uv venv --python ${{ matrix.python-version }} venv
-
-      - name: Install dependencies
-        run: uv pip sync requirements.txt --python venv
-
       - name: Run tests
-        run: uv run --frozen test.py
+        run: uv run --with python-dateutil --with six test.py
 
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check:

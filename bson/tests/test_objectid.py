@@ -25,7 +25,6 @@ sys.path[0:0] = [""]
 
 from bson.objectid import ObjectId, _fnv_1a_24
 from bson.objectid import InvalidId
-from bson.py3compat import PY3, _unicode
 from bson.tz_util import (FixedOffset,
                           utc)
 
@@ -467,7 +466,7 @@ class TestObjectId(unittest.TestCase):
 
     def test_unicode(self):
         a = ObjectId()
-        self.assertEqual(a, ObjectId(_unicode(a)))
+        self.assertEqual(a, ObjectId(a))
         self.assertEqual(ObjectId("123456789012123456789012"),
                          ObjectId(u"123456789012123456789012"))
         self.assertRaises(InvalidId, ObjectId, u"hello")
@@ -511,18 +510,19 @@ class TestObjectId(unittest.TestCase):
         self.assertTrue(oid_generated_on_client(ObjectId()))
 
     def test_generation_time(self):
-        d1 = datetime.datetime.utcnow()
+        d1 = datetime.datetime.now(utc)
         d2 = ObjectId().generation_time
 
         self.assertEqual(utc, d2.tzinfo)
-        d2 = d2.replace(tzinfo=None)
         self.assertTrue(d2 - d1 < datetime.timedelta(seconds=2))
 
     def test_from_datetime(self):
         if 'PyPy 1.8.0' in sys.version:
             # See https://bugs.pypy.org/issue1092
             raise SkipTest("datetime.timedelta is broken in pypy 1.8.0")
-        d = datetime.datetime.utcnow()
+        # note: could use tz aware datetimes here?
+        d = datetime.datetime.now(utc).replace(tzinfo=None)
+
         d = d - datetime.timedelta(microseconds=d.microsecond)
         oid = ObjectId.from_datetime(d)
         self.assertEqual(d, oid.generation_time.replace(tzinfo=None))
@@ -559,13 +559,9 @@ class TestObjectId(unittest.TestCase):
             b"object\np2\nNtp3\nRp4\n"
             b"S'M\\x9afV\\x13v\\xc0\\x0b\\x88\\x00\\x00\\x00'\np5\nb.")
 
-        if PY3:
-            # Have to load using 'latin-1' since these were pickled in python2.x.
-            oid_1_9 = pickle.loads(pickled_with_1_9, encoding='latin-1')
-            oid_1_10 = pickle.loads(pickled_with_1_10, encoding='latin-1')
-        else:
-            oid_1_9 = pickle.loads(pickled_with_1_9)
-            oid_1_10 = pickle.loads(pickled_with_1_10)
+        # Have to load using 'latin-1' since these were pickled in python2.x.
+        oid_1_9 = pickle.loads(pickled_with_1_9, encoding='latin-1')
+        oid_1_10 = pickle.loads(pickled_with_1_10, encoding='latin-1')
 
         self.assertEqual(oid_1_9, ObjectId("4d9a66561376c00b88000000"))
         self.assertEqual(oid_1_9, oid_1_10)

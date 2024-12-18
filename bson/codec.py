@@ -24,10 +24,6 @@ import calendar
 from dateutil.tz import tzutc
 from binascii import b2a_hex
 
-from six import integer_types, iterkeys, text_type, PY3
-from six.moves import xrange
-
-
 utc = tzutc()
 
 class MissingClassDefinition(ValueError):
@@ -132,7 +128,7 @@ def encode_string(value):
 
 def encode_cstring(value):
     if not isinstance(value, bytes):
-        value = text_type(value).encode("utf-8")
+        value = str(value).encode("utf-8")
     if b"\x00" in value:
         raise ValueError("Element names may not include NUL bytes.")
         # A NUL byte is used to delimit our string, accepting one would cause
@@ -172,24 +168,26 @@ def encode_double_element(name, value):
 def encode_string_element(name, value):
     return b"\x02" + encode_cstring(name) + encode_string(value)
 
-
+# any need for this at all with py3??
 def _is_string(value):
-    if isinstance(value, text_type):
+    if isinstance(value, str):
         return True
-    elif isinstance(value, str) or isinstance(value, bytes):
-        try:
-            unicode(value, errors='strict')
-            return True
-        except:
-            pass
-    return False
+    # this never worked in py3
+    # elif isinstance(value, str) or isinstance(value, bytes):
+    #     try:
+    #         unicode(value, errors='strict')
+    #         return True
+    #     except:
+    #         pass
+    else:
+        return False
 
 
 def encode_value(name, value, buf, traversal_stack,
                  generator_func, on_unknown=None):
     if isinstance(value, bool):
         buf.write(encode_boolean_element(name, value))
-    elif isinstance(value, integer_types):
+    elif isinstance(value, int):
         if value < -0x80000000 or 0x7FFFFFFFFFFFFFFF >= value > 0x7fffffff:
             buf.write(encode_int64_element(name, value))
         elif value > 0x7FFFFFFFFFFFFFFF:
@@ -238,7 +236,7 @@ def encode_value(name, value, buf, traversal_stack,
 def encode_document(obj, traversal_stack, traversal_parent=None,
                     generator_func=None, on_unknown=None):
     buf = StringIO()
-    key_iter = iterkeys(obj)
+    key_iter = iter(obj)
     if generator_func is not None:
         key_iter = generator_func(obj, traversal_stack)
     for name in key_iter:
@@ -256,7 +254,7 @@ def encode_document(obj, traversal_stack, traversal_parent=None,
 def encode_array(array, traversal_stack, traversal_parent=None,
                  generator_func=None, on_unknown=None):
     buf = StringIO()
-    for i in xrange(0, len(array)):
+    for i in range(0, len(array)):
         value = array[i]
         traversal_stack.append(TraversalStep(traversal_parent or array, i))
         encode_value(str(i), value, buf, traversal_stack,
@@ -295,10 +293,7 @@ def decode_document(data, base, as_array=False):
 
         element_type = char_struct.unpack(data[base:base + 1])[0]
 
-        if PY3:
-            ll = data.index(0, base + 1) + 1
-        else:
-            ll = data.index("\x00", base + 1) + 1
+        ll = data.index(0, base + 1) + 1
         if decode_name:
             name = data[base + 1:ll - 1]
             try:

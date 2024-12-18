@@ -20,8 +20,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Create virtual environment
+        run: uv venv --python ${{ matrix.python-version }} venv
+
       - name: Install dependencies
-        run: uv pip sync requirements.txt
+        run: uv pip sync requirements.txt --python venv
 
       - name: Run tests
         run: python test.py

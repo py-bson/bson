@@ -20,8 +20,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Create venv
+        run: uv venv venv --python ${{ matrix.python-version }}
+
       - name: Install dependencies
-        run: uv pip install --system python-dateutil>=2.4.0 six>=1.9.0
+        run: uv pip install python-dateutil>=2.4.0 six>=1.9.0
 
       - name: Run tests
         run: python test.py

@@ -522,7 +522,7 @@ class TestObjectId(unittest.TestCase):
         if 'PyPy 1.8.0' in sys.version:
             # See https://bugs.pypy.org/issue1092
             raise SkipTest("datetime.timedelta is broken in pypy 1.8.0")
-        d = datetime.datetime.utcnow()
+        d = datetime.datetime.utcfromtimestamp(2000000000)
         d = d - datetime.timedelta(microseconds=d.microsecond)
         oid = ObjectId.from_datetime(d)
         self.assertEqual(d, oid.generation_time.replace(tzinfo=None))

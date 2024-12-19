@@ -5,6 +5,8 @@ from bson import BSONCoding, dumps, loads, import_class
 
 
 class TestData(BSONCoding):
+    __test__ = False
+
     def __init__(self, *args):
         self.args = list(args)
         self.nested = None

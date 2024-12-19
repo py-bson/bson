@@ -27,7 +27,7 @@ setup(
     name="bson",
     version="0.5.10",
     packages=["bson"],
-    install_requires=["python-dateutil>=2.4.0", "six>=1.9.0"],
+    install_requires=["python-dateutil>=2.4.0"],
     author="Ayun Park",
     author_email="iamparkayun@gmail.com",
     description="BSON codec for Python",
@@ -37,8 +37,6 @@ setup(
     keywords="BSON codec",
     url="http://github.com/py-bson/bson",
     classifiers=[
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',

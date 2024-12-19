@@ -41,18 +41,18 @@ def _fnv_1a_24(data, _ord=_ord):
     """FNV-1a 24 bit hash"""
     # http://www.isthe.com/chongo/tech/comp/fnv/index.html#xor-fold
     # Start with FNV-1a 32 bit.
-    hash_size = 2 ** 32
+    hash_size = 2**32
     fnv_32_prime = 16777619
     fnv_1a_hash = 2166136261  # 32-bit FNV-1 offset basis
     for elt in data:
         fnv_1a_hash = fnv_1a_hash ^ _ord(elt)
         fnv_1a_hash = (fnv_1a_hash * fnv_32_prime) % hash_size
     # xor-fold the result to 24 bit.
-    return (fnv_1a_hash >> 24) ^ (fnv_1a_hash & 0xffffff)
+    return (fnv_1a_hash >> 24) ^ (fnv_1a_hash & 0xFFFFFF)
+
 
 def _machine_bytes():
-    """Get the machine portion of an ObjectId.
-    """
+    """Get the machine portion of an ObjectId."""
     # gethostname() returns a unicode string in python 3.x
     # We only need 3 bytes, and _fnv_1a_24 returns a 24 bit integer.
     # Remove the padding byte.
@@ -60,25 +60,25 @@ def _machine_bytes():
 
 
 class InvalidId(ValueError):
-    """Raised when trying to create an ObjectId from invalid data.
-    """
+    """Raised when trying to create an ObjectId from invalid data."""
+
 
 def _raise_invalid_id(oid):
     raise InvalidId(
         "%r is not a valid ObjectId, it must be a 12-byte input"
-        " or a 24-character hex string" % oid)
+        " or a 24-character hex string" % oid
+    )
 
 
 class ObjectId(object):
-    """A MongoDB ObjectId.
-    """
+    """A MongoDB ObjectId."""
 
     _inc = random.randint(0, 0xFFFFFF)
     _inc_lock = threading.Lock()
 
     _machine_bytes = _machine_bytes()
 
-    __slots__ = ('__id')
+    __slots__ = "__id"
 
     _type_marker = 7
 
@@ -157,8 +157,7 @@ class ObjectId(object):
         if generation_time.utcoffset() is not None:
             generation_time = generation_time - generation_time.utcoffset()
         timestamp = calendar.timegm(generation_time.timetuple())
-        oid = struct.pack(
-            ">i", int(timestamp)) + b"\x00\x00\x00\x00\x00\x00\x00\x00"
+        oid = struct.pack(">i", int(timestamp)) + b"\x00\x00\x00\x00\x00\x00\x00\x00"
         return cls(oid)
 
     @classmethod
@@ -180,8 +179,7 @@ class ObjectId(object):
             return False
 
     def __generate(self):
-        """Generate a new value for this ObjectId.
-        """
+        """Generate a new value for this ObjectId."""
 
         # 4 bytes current time
         oid = struct.pack(">i", int(time.time()))
@@ -222,13 +220,30 @@ class ObjectId(object):
             else:
                 _raise_invalid_id(oid)
         else:
-            raise TypeError("id must be an instance of (bytes, %s, ObjectId), "
-                            "not %s" % (text_type.__name__, type(oid)))
+            raise TypeError(
+                "id must be an instance of (bytes, %s, ObjectId), "
+                "not %s" % (text_type.__name__, type(oid))
+            )
+
+    @classmethod
+    def __get_validators__(cls):
+        """Yields all validators for this type.
+        Used to create a pydantic model.
+        """
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, oid):
+        """Validate the given value as an ObjectId.
+        Pydantic model validator.
+        """
+        if not isinstance(oid, ObjectId):
+            raise ValueError("Not a valid ObjectId")
+        return oid
 
     @property
     def binary(self):
-        """12-byte binary representation of this ObjectId.
-        """
+        """12-byte binary representation of this ObjectId."""
         return self.__id
 
     @property
@@ -250,8 +265,7 @@ class ObjectId(object):
         return self.__id
 
     def __setstate__(self, value):
-        """explicit state set from pickling
-        """
+        """explicit state set from pickling"""
         # Provide backwards compatability with OIDs
         # pickled with pymongo-1.9 or older.
         if isinstance(value, dict):
@@ -262,7 +276,7 @@ class ObjectId(object):
         # In python 3.x this has to be converted to `bytes`
         # by encoding latin-1.
         if PY3 and isinstance(oid, text_type):
-            self.__id = oid.encode('latin-1')
+            self.__id = oid.encode("latin-1")
         else:
             self.__id = oid
 

@@ -38,7 +38,7 @@ jobs:
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check:
     if: always()
-    needs: [test]
+    needs: [test, lint]
 #      - test
 #      - lint
     runs-on: ubuntu-latest

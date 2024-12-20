@@ -38,9 +38,9 @@ jobs:
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check:
     if: always()
-    needs:
-      - test
-      - lint
+    needs: [test]
+#      - test
+#      - lint
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed

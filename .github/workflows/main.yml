@@ -23,10 +23,23 @@ jobs:
       - name: Run tests
         run: scripts/test
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: ruff check
+        run: uv run ruff check bson/
+
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check:
     if: always()
-    needs: [test]
+    needs:
+      - test
+      - lint
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed

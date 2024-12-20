@@ -32,7 +32,9 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: ruff check
-        run: uv run ruff check bson/
+        run:
+          - uv add ruff 
+          - uv run ruff check bson/
 
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check:

@@ -32,12 +32,12 @@ class TestData(BSONCoding):
 
 class TestObjectCoding(TestCase):
     def test_codec(self):
-        import_class(_TestData)
-        data = _TestData(u"Lorem ipsum dolor sit amet",
+        import_class(TestData)
+        data = TestData(u"Lorem ipsum dolor sit amet",
                         "consectetur adipisicing elit",
                         42)
 
-        data2 = _TestData(u"She's got both hands in her pockets",
+        data2 = TestData(u"She's got both hands in her pockets",
                          "and she won't look at you won't look at you eh",
                          66,
                          23.54,

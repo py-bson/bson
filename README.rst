@@ -12,6 +12,13 @@ Independent BSON codec for Python that doesn't depend on MongoDB. The bson
 ObjectId implementation is forked from the PyMongo project, licensed under
 the Version 2.0 Apache License.
 
+A word of caution
+-----------------
+
+Installing ``py-bson`` in the system with ``pymongo`` already installed may cause problems.
+Please proceed with caution.
+
+
 Installation
 ------------
 

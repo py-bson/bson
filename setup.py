@@ -4,7 +4,7 @@
 # Copyright (c) 2015, Ayun Park. All rights reserved.
 # For licensing, see LICENSE file included in the package.
 import sys
-import pkgutil
+import importlib.util
 from setuptools import setup
 from setuptools.command.install import install
 
@@ -13,9 +13,7 @@ class NewInstall(install):
 
     @staticmethod
     def check_pymongo():
-        if pkgutil.find_loader('pymongo'):
-            return True
-        return False
+        return importlib.util.find_spec('pymongo')
 
     def run(self):
         install.run(self)
@@ -37,12 +35,12 @@ setup(
     keywords="BSON codec",
     url="http://github.com/py-bson/bson",
     classifiers=[
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
     ],
     cmdclass={'install': NewInstall}
 )

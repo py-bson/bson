@@ -27,15 +27,14 @@ import struct
 import threading
 import time
 
-from bson.py3compat import PY3, bytes_from_hex, string_type, text_type
+# from bson.py3compat import bytes_from_hex #string_type
 from bson.tz_util import utc
 
 
 # fnv_1a_24 adaptation taken from MongoDB Python Driver at https://github.com/mongodb/mongo-python-driver/commit/61850357a0e0eeec1a30e1adc0bbf7ebee807358
-if PY3:
-    _ord = lambda x: x
-else:
-    _ord = ord
+# is this needed at all for Py3?
+_ord = lambda x: x
+
 # http://isthe.com/chongo/tech/comp/fnv/index.html#FNV-1a
 def _fnv_1a_24(data, _ord=_ord):
     """FNV-1a 24 bit hash"""
@@ -212,18 +211,17 @@ class ObjectId(object):
         """
         if isinstance(oid, ObjectId):
             self.__id = oid.binary
-        # bytes or unicode in python 2, str in python 3
-        elif isinstance(oid, string_type):
+        elif isinstance(oid, str):
             if len(oid) == 24:
                 try:
-                    self.__id = bytes_from_hex(oid)
+                    self.__id = bytes.fromhex(oid)
                 except (TypeError, ValueError):
                     _raise_invalid_id(oid)
             else:
                 _raise_invalid_id(oid)
         else:
             raise TypeError("id must be an instance of (bytes, %s, ObjectId), "
-                            "not %s" % (text_type.__name__, type(oid)))
+                            "not %s" % ('str', type(oid)))
 
     @property
     def binary(self):
@@ -261,15 +259,13 @@ class ObjectId(object):
         # ObjectIds pickled in python 2.x used `str` for __id.
         # In python 3.x this has to be converted to `bytes`
         # by encoding latin-1.
-        if PY3 and isinstance(oid, text_type):
+        if isinstance(oid, str):
             self.__id = oid.encode('latin-1')
         else:
             self.__id = oid
 
     def __str__(self):
-        if PY3:
-            return binascii.hexlify(self.__id).decode()
-        return binascii.hexlify(self.__id)
+        return binascii.hexlify(self.__id).decode()
 
     def __repr__(self):
         return "ObjectId('%s')" % (str(self),)

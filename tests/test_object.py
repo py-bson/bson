@@ -3,7 +3,6 @@ from unittest import TestCase
 
 from bson import BSONCoding, dumps, loads, import_class
 
-
 class TestData(BSONCoding):
     __test__ = False
 
